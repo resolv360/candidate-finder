@@ -362,6 +362,16 @@ class WorkspaceManager {
       return;
     }
 
+    if (
+      !this.data.settings.GEMINI_API_KEY ||
+      !this.data.settings.GOOGLE_CUSTOM_SEARCH_API_KEY ||
+      !this.data.settings.GOOGLE_CUSTOM_SEARCH_ID
+    ) {
+      alert("First add credentials in settings");
+      this.openSettingsModal();
+      return;
+    }
+
     const form = document.getElementById(
       "createWorkspaceForm"
     ) as HTMLFormElement | null;
