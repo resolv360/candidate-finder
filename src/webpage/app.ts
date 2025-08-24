@@ -605,14 +605,10 @@ class WorkspaceManager {
   private getDefaultTemplate(): string {
     return `Hi [Name],
 
-I hope this message finds you well. I came across your profile and was impressed by your experience in [specific skill/area].
-
-We have an exciting opportunity that I believe could be a great fit for your background and expertise.
-
-Would you be interested in learning more about this opportunity?
+Content
 
 Best regards,
-[Your Name]`;
+Your Name`;
   }
 
   private showLoading(): void {
