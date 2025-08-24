@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LinkedIn Recruiter Workspace</title>
+    <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+    <!-- Main Layout -->
+    <div class="app-container">
+        <!-- Left Sidebar Navigation -->
+        <nav class="sidebar">
+            <div class="sidebar-header">
+                <h2>Workspaces</h2>
+            </div>
+            
+            <div class="sidebar-actions">
+                <button class="btn btn--primary btn--full-width" id="createWorkspaceBtn">
+                    + Create Workspace
+                </button>
+                <button class="btn btn--outline btn--full-width" id="settingsBtn">
+                    ⚙️ Settings
+                </button>
+            </div>
+            
+            <div class="workspace-list" id="workspaceList">
+                <!-- Workspaces will be populated here -->
+            </div>
+        </nav>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <div class="workspace-view" id="workspaceView">
+                <div class="welcome-message">
+                    <h2>Welcome to LinkedIn Recruiter Workspace</h2>
+                    <p>Select a workspace from the sidebar or create a new one to get started.</p>
+                </div>
+            </div>
+            
+            <div class="workspace-content hidden" id="workspaceContent">
+                <!-- LinkedIn Profiles Section -->
+                <div class="profiles-section">
+                    <div class="section-header">
+                        <h3>LinkedIn Profiles</h3>
+                        <span class="profile-count" id="profileCount">0 profiles</span>
+                    </div>
+                    <button id="openNext5Btn" style="padding: 10px 0px">Open next 5</button>
+                    <div class="profiles-list" id="profilesList">
+                        <!-- Profiles will be populated here -->
+                    </div>
+                </div>
+                
+                <!-- Template Section -->
+                <div class="template-section">
+                    <div class="section-header">
+                        <h3>Template</h3>
+                    </div>
+                    <textarea 
+                        class="form-control template-textarea" 
+                        id="templateTextarea"
+                        placeholder="Enter your message template here..."
+                    ></textarea>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Create Workspace Modal -->
+    <div class="modal hidden" id="createWorkspaceModal">
+        <div class="modal-backdrop" id="createWorkspaceBackdrop"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Create New Workspace</h3>
+                <button class="modal-close" id="createWorkspaceClose">&times;</button>
+            </div>
+            <form id="createWorkspaceForm">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label class="form-label" for="workspaceTitle">Title</label>
+                        <input type="text" class="form-control" id="workspaceTitle" value="Untitled">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="jobDescription">Job Description</label>
+                        <textarea class="form-control" id="jobDescription" rows="4" placeholder="Enter job description..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="candidateCount">Number of candidates to scrape</label>
+                        <input type="number" class="form-control" id="candidateCount" min="1" max="50" value="10">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="queryCount">Number of queries</label>
+                        <input type="number" class="form-control" id="queryCount" min="1" max="10" value="3">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn--outline" id="cancelCreateWorkspace">Cancel</button>
+                    <button type="submit" class="btn btn--primary">Create</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Preview Modal -->
+    <div class="modal hidden" id="previewModal">
+        <div class="modal-backdrop" id="previewBackdrop"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Generated Search Queries</h3>
+                <button class="modal-close" id="previewClose">&times;</button>
+            </div>
+            <form id="previewForm">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label class="form-label" for="searchQueries">Search Queries (one per line)</label>
+                        <textarea class="form-control" id="searchQueries" rows="6" placeholder="Generated search queries will appear here..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn--outline" id="cancelPreview">Cancel</button>
+                    <button type="submit" class="btn btn--primary">Submit</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div class="modal hidden" id="settingsModal">
+        <div class="modal-backdrop" id="settingsBackdrop"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Settings</h3>
+                <button class="modal-close" id="settingsClose">&times;</button>
+            </div>
+            <form id="settingsForm">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label class="form-label" for="googleApiKey">Google Custom Search API Key</label>
+                        <input type="password" class="form-control" id="googleApiKey" placeholder="Enter API key...">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="googleSearchId">Google Custom Search ID</label>
+                        <input type="text" class="form-control" id="googleSearchId" placeholder="Enter search ID...">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="geminiApiKey">Gemini API Key</label>
+                        <input type="password" class="form-control" id="geminiApiKey" placeholder="Enter API key...">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn--outline" id="cancelSettings">Cancel</button>
+                    <button type="submit" class="btn btn--primary">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Loading Spinner -->
+    <div class="loading-overlay hidden" id="loadingOverlay">
+        <div class="loading-spinner"></div>
+        <p>Loading...</p>
+    </div>
+
+    <script src="../../dist/app.js"></script>
+</body>
+</html>

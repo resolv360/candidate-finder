@@ -1,0 +1,30 @@
+{
+  "manifest_version": 3,
+  "name": "LinkedIn Candidate Scrapper V2",
+  "version": "1.0",
+  "permissions": ["tabs", "scripting", "clipboardWrite", "storage"],
+  "background": {
+    "service_worker": "dist/background.js",
+    "type": "module"
+  },
+  "action": {
+    "default_title": "Open page"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["dist/content-script.js"]
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["dist/content-script.js"],
+      "matches": ["<all_urls>"]
+    }
+  ],
+  "host_permissions": [
+    "https://www.perplexity.ai/*",
+    "https://www.linkedin.com/*",
+    "<all_urls>"
+  ]
+}
