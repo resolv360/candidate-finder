@@ -4,7 +4,7 @@ import { fetchWorkspaceData, parseTemplate } from "./utils";
 chrome.action.onClicked.addListener(() => {
   chrome.tabs.create({ url: chrome.runtime.getURL("src/webpage/index.html") });
 });
-console.log("Hi");
+console.log("Extension started!");
 
 // Listen to active tab changes
 chrome.tabs.onActivated.addListener(async (activeInfo) => {
@@ -37,11 +37,9 @@ chrome.tabs.onActivated.addListener(async (activeInfo) => {
     }
 
     const tabUrl = new URL(tab.url);
-    console.log(currentWorkspace, tabUrl);
 
     const candidate = currentWorkspace.profiles.find((p) => {
       const linkUrl = new URL(p.link);
-      console.log(linkUrl);
 
       return (
         linkUrl.host.match(/\w+\.linkedin\.com/) &&

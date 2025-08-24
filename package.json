@@ -4,7 +4,7 @@
   "description": "",
   "scripts": {
     "build": "vite build",
-    "dev": "npx chokidar \"src/**/*\" -c \"vite build\""
+    "dev": "vite build && npx chokidar \"src/**/*\" -c \"vite build\""
   },
   "keywords": [],
   "author": "",
