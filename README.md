@@ -7,6 +7,11 @@ npm install
 npm run build
 ```
 
+### Get API Keys & project
+- GOOGLE_CUSTOM_SEARCH_API_KEY: https://developers.google.com/custom-search/v1/overview#api_key
+- GEMINI_API_KEY: https://aistudio.google.com/
+- GOOGLE_CUSTOM_SEARCH_ID: https://programmablesearchengine.google.com/controlpanel/all (add here and copy the "cx")
+
 ### Loading the extension into the browser
 1. Open "chrome://extensions/" in any latest chromium based browser.
 2. Enable developer mode (mostly in right top corner in same page)
