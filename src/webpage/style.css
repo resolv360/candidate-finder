@@ -1161,3 +1161,11 @@ select.form-control {
 .workspace-content.switching {
   opacity: 0;
 }
+
+#candidatesActions {
+  display: flex;
+  
+  #openNext5Btn {
+    flex-grow: 1;
+  }
+}

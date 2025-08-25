@@ -4,7 +4,7 @@ import {
   Workspace,
   WorkspaceManagerData,
 } from "./types";
-import { fetchWorkspaceData, getDefaultWorkspaceManagerData } from "./utils";
+import { decodeHtmlEntities, downloadCSV, fetchWorkspaceData, getDefaultWorkspaceManagerData } from "./utils";
 
 import { LLM } from "./llm";
 import { searchCandidates } from "./candidate-search";
@@ -67,6 +67,21 @@ class WorkspaceManager {
     });
   }
 
+  private downloadCSV() {
+    const workspace = this.getWorkspaceById(this.data.currentWorkspaceId);
+    if (!workspace) return;
+
+    const data = workspace.profiles.map((profile) => [
+      profile.name,
+      decodeHtmlEntities(profile.jobTitle),
+      profile.link,
+    ]);
+
+    const workspaceTitle = workspace.title.replace(/[^a-zA-Z0-9_]/g, "_");
+    downloadCSV([["Name", "Job Title", "Link"], ...data], `${workspace.id}_${workspaceTitle}.csv`)
+    console.log("CSV downloaded successfully");
+  }
+
   private bindStaticEvents(): void {
     const createBtn = document.getElementById(
       "createWorkspaceBtn"
@@ -87,6 +102,16 @@ class WorkspaceManager {
       openNext5Btn.onclick = (e) => {
         console.log("Open next 5 button clicked");
         this.openNext5Workspaces();
+      };
+    }
+
+    const downloadCSVBtn = document.getElementById(
+      "downloadCsvBtn"
+    ) as HTMLButtonElement | null;
+    if (downloadCSVBtn) {
+      downloadCSVBtn.onclick = (e) => {
+        console.log("Download CSV button clicked");
+        this.downloadCSV();
       };
     }
 

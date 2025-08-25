@@ -1,5 +1,5 @@
 import { Candidate } from "./types";
-import { CandidateResults } from "./candidate-result";
+import { CandidateResults } from "./candidate-result-types";
 
 export async function searchCandidates(
   queries: string[],
