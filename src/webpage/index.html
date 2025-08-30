@@ -12,58 +12,175 @@
         <!-- Left Sidebar Navigation -->
         <nav class="sidebar">
             <div class="sidebar-header">
-                <h2>Workspaces</h2>
+                <h2>Navigation</h2>
             </div>
             
-            <div class="sidebar-actions">
-                <button class="btn btn--primary btn--full-width" id="createWorkspaceBtn">
-                    + Create Workspace
+            <div class="sidebar-navigation">
+                <button class="nav-tab active" data-view="workspaces">
+                    📁 Workspaces
                 </button>
-                <button class="btn btn--outline btn--full-width" id="settingsBtn">
-                    ⚙️ Settings
+                <button class="nav-tab" data-view="leadgen">
+                    🚀 Lead Generation
                 </button>
             </div>
             
-            <div class="workspace-list" id="workspaceList">
-                <!-- Workspaces will be populated here -->
+            <!-- Workspaces Section -->
+            <div class="nav-content active" id="workspacesSection">
+                <div class="sidebar-actions">
+                    <button class="btn btn--primary btn--full-width" id="createWorkspaceBtn">
+                        + Create Workspace
+                    </button>
+                    <button class="btn btn--outline btn--full-width" id="settingsBtn">
+                        ⚙️ Settings
+                    </button>
+                </div>
+                
+                <div class="workspace-list" id="workspaceList">
+                    <!-- Workspaces will be populated here -->
+                </div>
+            </div>
+
+            <!-- Lead Generation Section -->
+            <div class="nav-content" id="leadgenSection">
+                <div class="sidebar-actions">
+                    <button class="btn btn--outline btn--full-width" id="testConnectionBtn">
+                        🔗 Test Connection
+                    </button>
+                    <button class="btn btn--primary btn--full-width" id="completeWorkflowBtn">
+                        ⚡ Complete Workflow
+                    </button>
+                </div>
+                
+                <div class="leadgen-status">
+                    <div class="connection-status" id="connectionStatus"></div>
+                    <div class="workflow-status" id="workflowStatus"></div>
+                </div>
             </div>
         </nav>
 
         <!-- Main Content Area -->
         <main class="main-content">
-            <div class="workspace-view" id="workspaceView">
+            <!-- Workspace Welcome View -->
+            <div class="content-view active" id="workspaceView">
                 <div class="welcome-message">
                     <h2>Welcome to LinkedIn Recruiter Workspace</h2>
                     <p>Select a workspace from the sidebar or create a new one to get started.</p>
                 </div>
             </div>
             
-            <div class="workspace-content hidden" id="workspaceContent">
-                <!-- LinkedIn Profiles Section -->
-                <div class="profiles-section">
-                    <div class="section-header">
-                        <h3>LinkedIn Profiles</h3>
-                        <span class="profile-count" id="profileCount">0 profiles</span>
+            <!-- Workspace Content View -->
+            <div class="content-view hidden" id="workspaceContent">
+                <div class="workspace-content-grid">
+                    <!-- LinkedIn Profiles Section -->
+                    <div class="profiles-section">
+                        <div class="section-header">
+                            <h3>LinkedIn Profiles</h3>
+                            <span class="profile-count" id="profileCount">0 profiles</span>
+                        </div>
+                        <div id="candidatesActions">
+                            <button id="openNext5Btn" style="padding: 10px 2px">Open next 5</button>
+                            <button id="downloadCsvBtn" style="padding: 10px 2px">Download CSV ⬇️</button>
+                        </div>
+                        <div class="profiles-list" id="profilesList">
+                            <!-- Profiles will be populated here -->
+                        </div>
                     </div>
-                    <div id="candidatesActions">
-                        <button id="openNext5Btn" style="padding: 10px 2px">Open next 5</button>
-                        <button id="downloadCsvBtn" style="padding: 10px 2px">Download CSV ⬇️</button>
-                    </div>
-                    <div class="profiles-list" id="profilesList">
-                        <!-- Profiles will be populated here -->
+                    
+                    <!-- Template Section -->
+                    <div class="template-section">
+                        <div class="section-header">
+                            <h3>Template</h3>
+                        </div>
+                        <textarea 
+                            class="form-control template-textarea" 
+                            id="templateTextarea"
+                            placeholder="Enter your message template here..."
+                        ></textarea>
                     </div>
                 </div>
-                
-                <!-- Template Section -->
-                <div class="template-section">
-                    <div class="section-header">
-                        <h3>Template</h3>
+            </div>
+
+            <!-- Lead Generation Content View -->
+            <div class="content-view" id="leadgenView">
+                <div class="leadgen-container">
+                    <!-- Header Section -->
+                    <div class="leadgen-header">
+                        <h2>🇮🇳 Indian Startup Lead Generation Dashboard</h2>
+                        <p>Extract funding data with LinkedIn connect strategies from YourStory, Entrackr, and Inc42</p>
+                        <div style="font-size: 14px; color: var(--color-text-secondary); margin-top: 8px;">
+                            ✅ Indian-focused scraping • ✅ LinkedIn strategies • ✅ Funding filters • ✅ Real-time data
+                        </div>
                     </div>
-                    <textarea 
-                        class="form-control template-textarea" 
-                        id="templateTextarea"
-                        placeholder="Enter your message template here..."
-                    ></textarea>
+
+                    <!-- API Configuration Section -->
+                    <div class="section">
+                        <div class="section-header">
+                            <h3>Indian Startup Lead Generation Configuration</h3>
+                            <p style="color: var(--color-text-secondary); font-size: 14px; margin-top: 4px;">
+                                Configure extraction settings for Indian startups from YourStory, Entrackr, and Inc42
+                            </p>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="apiBaseUrl">API Base URL</label>
+                            <input type="text" class="form-control" id="apiBaseUrl" value="http://localhost:5000" placeholder="http://localhost:5000">
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label" for="minFunding">Minimum Funding (USD Millions)</label>
+                                <input type="number" class="form-control" id="minFunding" value="5" min="0" max="1000" placeholder="5">
+                                <small class="form-help">Filter companies by minimum funding amount</small>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="maxCompanies">Maximum Companies</label>
+                                <input type="number" class="form-control" id="maxCompanies" value="30" min="5" max="100" placeholder="30">
+                                <small class="form-help">Limit the number of companies to extract</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Workflow Actions Section -->
+                    <div class="section">
+                        <div class="section-header">
+                            <h3>Indian Startup Lead Generation Workflow</h3>
+                            <p style="color: var(--color-text-secondary); font-size: 14px; margin-top: 4px;">
+                                Extract funding data with LinkedIn connect strategies from Indian startup sources
+                            </p>
+                        </div>
+                        <div class="workflow-actions">
+                            <button class="btn btn--primary" id="extractDataBtn">
+                                <span>1. Extract Indian Companies</span>
+                                <small>From YourStory, Entrackr, Inc42</small>
+                            </button>
+                            <button class="btn btn--primary" id="enrichDataBtn" disabled>
+                                <span>2. Enrich with LinkedIn</span>
+                                <small>Add contact & strategy data</small>
+                            </button>
+                            <button class="btn btn--success" id="completeWorkflowBtn">
+                                <span>🚀 Complete Workflow</span>
+                                <small>Extract + Enrich + LinkedIn Strategies</small>
+                            </button>
+                            <button class="btn btn--secondary" id="viewLatestBtn">
+                                <span>View Latest Output</span>
+                                <small>See generated data</small>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Results Section -->
+                    <div class="section">
+                        <div class="section-header">
+                            <h3>Results</h3>
+                            <button class="btn btn--outline btn--small" id="refreshFilesBtn">Refresh Files</button>
+                        </div>
+                        <div class="results-container">
+                            <div class="files-list" id="filesList">
+                                <!-- Files will be populated here -->
+                            </div>
+                            <div class="companies-preview" id="companiesPreview">
+                                <!-- Company data preview will be shown here -->
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </main>

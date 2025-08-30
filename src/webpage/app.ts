@@ -7,6 +7,7 @@ import {
 import { decodeHtmlEntities, downloadCSV, fetchWorkspaceData, getDefaultWorkspaceManagerData } from "./utils";
 
 import { LLM } from "./llm";
+import { LeadGenManager } from "./leadgen";
 import { searchCandidates } from "./candidate-search";
 
 let tempNewWorkspaceData: Partial<Workspace> | null = null;
@@ -48,6 +49,7 @@ class WorkspaceManager {
   init(): void {
     console.log("Initializing WorkspaceManager...");
     this.bindStaticEvents();
+    this.bindTabEvents();
     this.renderWorkspaceList();
     console.log("WorkspaceManager initialized successfully");
   }
@@ -195,6 +197,53 @@ class WorkspaceManager {
     }
   }
 
+  private bindTabEvents(): void {
+    // Sidebar navigation
+    const navTabs = document.querySelectorAll('.nav-tab');
+    const navContents = document.querySelectorAll('.nav-content');
+    const contentViews = document.querySelectorAll('.content-view');
+
+    navTabs.forEach(tab => {
+      tab.addEventListener('click', (e) => {
+        const target = e.target as HTMLButtonElement;
+        const viewName = target.getAttribute('data-view');
+        
+        if (!viewName) return;
+
+        // Remove active class from all nav tabs and contents
+        navTabs.forEach(btn => btn.classList.remove('active'));
+        navContents.forEach(content => content.classList.remove('active'));
+        contentViews.forEach(view => view.classList.remove('active'));
+
+        // Add active class to clicked tab and corresponding content
+        target.classList.add('active');
+        
+        // Show corresponding sidebar content
+        const targetNavContent = document.getElementById(`${viewName}Section`);
+        if (targetNavContent) {
+          targetNavContent.classList.add('active');
+        }
+
+        // Show corresponding main content view
+        if (viewName === 'workspaces') {
+          // Show workspaces view
+          const currentWorkspace = this.getWorkspaceById(this.data.currentWorkspaceId);
+          if (currentWorkspace) {
+            document.getElementById('workspaceContent')?.classList.add('active');
+          } else {
+            document.getElementById('workspaceView')?.classList.add('active');
+          }
+        } else if (viewName === 'leadgen') {
+          // Show lead generation view and initialize manager
+          document.getElementById('leadgenView')?.classList.add('active');
+          if (!window.leadGenManager) {
+            window.leadGenManager = new LeadGenManager();
+          }
+        }
+      });
+    });
+  }
+
   // ---------- Workspace Management ----------
   private renderWorkspaceList(): void {
     const workspaceList = document.getElementById("workspaceList");
@@ -249,8 +298,11 @@ class WorkspaceManager {
 
     this.data.currentWorkspaceId = workspaceId;
 
-    workspaceView.style.display = "none";
-    workspaceContent.classList.remove("hidden");
+    // Hide all content views
+    document.querySelectorAll('.content-view').forEach(view => view.classList.remove('active'));
+    
+    // Show workspace content
+    workspaceContent.classList.add('active');
 
     this.renderWorkspaceList();
     this.renderProfiles(workspace);
