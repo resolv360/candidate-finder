@@ -37,3 +37,10 @@ export interface Candidate {
   link: string;
 }
 
+// Global window interface extensions
+declare global {
+  interface Window {
+    leadGenManager?: any;
+  }
+}
+

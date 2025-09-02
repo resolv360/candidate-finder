@@ -3,6 +3,8 @@
 ## Overview
 This API specializes in extracting funding data from Indian startup news sources with LinkedIn connect message strategies. It focuses specifically on YourStory, Entrackr, and Inc42 to find the most comprehensive Indian startup funding information.
 
+**NEW**: Now includes a simple startup + LinkedIn finder that uses Perplexity to find startups and Google Search API to find CEO LinkedIn profiles.
+
 ## Base URL
 ```
 http://localhost:5000
@@ -10,6 +12,7 @@ http://localhost:5000
 
 ## Features
 - ✅ **Indian-focused scraping** from YourStory, Entrackr, Inc42
+- ✅ **Simple Startup + LinkedIn Finder** using Perplexity + Google Search APIs
 - ✅ **Configurable funding filters** (minimum amount in millions USD)
 - ✅ **Company limit settings** for controlled data extraction
 - ✅ **LinkedIn connect message generation** with personalized strategies
@@ -58,7 +61,39 @@ Runs the complete extraction and enrichment workflow for Indian startups.
 }
 ```
 
-### 2. Extract Indian Companies
+### 2. Simple Startup + LinkedIn Finder
+**GET** `/api/startups?max_companies=10`
+
+Find new startup companies using Perplexity and get their CEO LinkedIn profiles using Google Search API.
+
+**Query Parameters:**
+- `max_companies` (optional): Maximum number of startups to find (default: 10, max: 20)
+
+**Response:**
+```json
+{
+  "success": true,
+  "count": 5,
+  "data": [
+    {
+      "startup_name": "TechStartup India",
+      "person_name": "Rajesh Kumar",
+      "role": "CEO",
+      "linkedin_url": "https://linkedin.com/in/rajeshkumar",
+      "connect_message": "Hi Rajesh, really impressed by TechStartup India's work in the fintech space. Would love to connect and learn more about your journey building such an innovative company!"
+    }
+  ],
+  "timestamp": "2025-09-01T17:00:00.000Z"
+}
+```
+
+**Features:**
+- Uses Perplexity Sonar Pro model to find recent Indian startups
+- Uses Google Custom Search API to find CEO LinkedIn profiles
+- Generates personalized connect messages
+- Returns exact JSON format: startup_name, person_name, role, linkedin_url, connect_message
+
+### 3. Extract Indian Companies
 **POST** `/api/extract`
 
 Extract funding data from Indian startup sources with configurable settings.
@@ -89,7 +124,7 @@ Extract funding data from Indian startup sources with configurable settings.
 }
 ```
 
-### 3. Get Indian Funding Articles
+### 4. Get Indian Funding Articles
 **GET** `/api/articles`
 
 Retrieve the latest funding articles from Indian startup news sources.
@@ -115,7 +150,7 @@ Retrieve the latest funding articles from Indian startup news sources.
 }
 ```
 
-### 4. Get Latest Output
+### 5. Get Latest Output
 **GET** `/api/latest-output`
 
 Retrieve the most recent workflow output with complete company data including LinkedIn strategies.
@@ -158,7 +193,7 @@ Retrieve the most recent workflow output with complete company data including Li
 }
 ```
 
-### 5. List Generated Files
+### 6. List Generated Files
 **GET** `/api/files`
 
 Get a list of all generated output files.
@@ -179,12 +214,12 @@ Get a list of all generated output files.
 }
 ```
 
-### 6. Download Files
+### 7. Download Files
 **GET** `/api/download/{filename}`
 
 Download a specific generated file.
 
-### 7. Health Check
+### 8. Health Check
 **GET** `/api/health`
 
 Check API health status.
@@ -290,6 +325,9 @@ Access the interactive frontend at: `http://localhost:5000`
 # Get Indian funding articles
 curl http://localhost:5000/api/articles
 
+# Find startups with LinkedIn profiles (Simple Finder)
+curl "http://localhost:5000/api/startups?max_companies=5"
+
 # Run complete workflow with custom settings
 curl -X POST http://localhost:5000/api/workflow/complete \
   -H "Content-Type: application/json" \
@@ -302,6 +340,32 @@ curl -X POST http://localhost:5000/api/extract \
 
 # Get latest results
 curl http://localhost:5000/api/latest-output
+```
+
+### Simple Startup + LinkedIn Finder
+```bash
+# Find 5 startups with LinkedIn profiles
+curl "http://localhost:5000/api/startups?max_companies=5"
+
+# Find 10 startups (maximum for quick testing)
+curl "http://localhost:5000/api/startups?max_companies=10"
+```
+
+**Expected Response Format:**
+```json
+{
+  "success": true,
+  "count": 5,
+  "data": [
+    {
+      "startup_name": "TechStartup India",
+      "person_name": "Rajesh Kumar", 
+      "role": "CEO",
+      "linkedin_url": "https://linkedin.com/in/rajeshkumar",
+      "connect_message": "Hi Rajesh, really impressed by TechStartup India's work in the fintech space..."
+    }
+  ]
+}
 ```
 
 ## Response Status Codes

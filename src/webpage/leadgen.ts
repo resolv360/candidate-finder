@@ -134,8 +134,36 @@ export interface APIResponse<T = any> {
   status: 'success' | 'error' | 'healthy';
   error?: string;
   message?: string;
-  timestamp?: string;
-  [key: string]: any;
+}
+
+export interface FilesResponse extends APIResponse {
+  files?: LeadGenFile[];
+  total?: number;
+}
+
+export interface SimpleStartupFinderResponse {
+  success: boolean;
+  count: number;
+  data: Array<{
+    startup_name: string;
+    founder_name: string;
+    role: string;
+    industry: string;
+    funding_stage: string;
+    total_funding_usd_mil: number;
+    funding_amount: string;
+    funding_date: string;
+    investors: string;
+    valuation: string;
+    linkedin_url: string;
+    linkedin_type: string;
+    connect_message: string | null;
+  }>;
+  timestamp: string;
+}
+
+export interface FilePreviewResponse extends APIResponse {
+  data?: any;
 }
 
 export class LeadGenManager {
@@ -153,10 +181,10 @@ export class LeadGenManager {
   }
 
   private bindEvents(): void {
-    // Test connection
-    const testConnectionBtn = document.getElementById('testConnectionBtn');
-    if (testConnectionBtn) {
-      testConnectionBtn.addEventListener('click', () => this.testConnection());
+    // Lead Settings Modal
+    const leadgenSettingsBtn = document.getElementById('leadgenSettingsBtn');
+    if (leadgenSettingsBtn) {
+      leadgenSettingsBtn.addEventListener('click', () => this.showLeadSettingsModal());
     }
 
     // API URL input
@@ -168,20 +196,10 @@ export class LeadGenManager {
       });
     }
 
-    // Workflow buttons
-    const extractDataBtn = document.getElementById('extractDataBtn');
-    if (extractDataBtn) {
-      extractDataBtn.addEventListener('click', () => this.extractData());
-    }
-
-    const enrichDataBtn = document.getElementById('enrichDataBtn');
-    if (enrichDataBtn) {
-      enrichDataBtn.addEventListener('click', () => this.enrichData());
-    }
-
-    const viewLatestBtn = document.getElementById('viewLatestBtn');
-    if (viewLatestBtn) {
-      viewLatestBtn.addEventListener('click', () => this.viewLatestOutput());
+    // Simple Startup Finder
+    const findStartupsBtn = document.getElementById('findStartupsBtn');
+    if (findStartupsBtn) {
+      findStartupsBtn.addEventListener('click', () => this.findStartups());
     }
 
     const completeWorkflowBtn = document.getElementById('completeWorkflowBtn');
@@ -244,6 +262,55 @@ export class LeadGenManager {
     }
   }
 
+  private showLeadSettingsModal(): void {
+    const modal = document.getElementById('leadSettingsModal');
+    if (!modal) return;
+
+    // Load current values into the modal
+    const apiUrlInput = modal.querySelector('#apiBaseUrl') as HTMLInputElement;
+    const minFundingInput = modal.querySelector('#minFunding') as HTMLInputElement;
+    const maxCompaniesInput = modal.querySelector('#maxCompanies') as HTMLInputElement;
+    const maxStartupsInput = modal.querySelector('#maxStartups') as HTMLInputElement;
+
+    if (apiUrlInput) apiUrlInput.value = this.baseUrl;
+    if (minFundingInput) minFundingInput.value = localStorage.getItem('leadgen_minFunding') || '5';
+    if (maxCompaniesInput) maxCompaniesInput.value = localStorage.getItem('leadgen_maxCompanies') || '30';
+    if (maxStartupsInput) maxStartupsInput.value = localStorage.getItem('leadgen_maxStartups') || '10';
+
+    modal.classList.remove('hidden');
+
+    // Bind modal events
+    const closeBtn = modal.querySelector('#leadSettingsClose');
+    const cancelBtn = modal.querySelector('#cancelLeadSettings');
+    const backdrop = modal.querySelector('#leadSettingsBackdrop');
+    const form = modal.querySelector('#leadSettingsForm') as HTMLFormElement;
+
+    const closeModal = () => {
+      modal.classList.add('hidden');
+    };
+
+    closeBtn?.addEventListener('click', closeModal);
+    cancelBtn?.addEventListener('click', closeModal);
+    backdrop?.addEventListener('click', closeModal);
+
+    form?.addEventListener('submit', (e) => {
+      e.preventDefault();
+      
+      // Save settings
+      if (apiUrlInput) {
+        this.baseUrl = apiUrlInput.value;
+        localStorage.setItem('leadgen_apiBaseUrl', this.baseUrl);
+      }
+      if (minFundingInput) localStorage.setItem('leadgen_minFunding', minFundingInput.value);
+      if (maxCompaniesInput) localStorage.setItem('leadgen_maxCompanies', maxCompaniesInput.value);
+      if (maxStartupsInput) localStorage.setItem('leadgen_maxStartups', maxStartupsInput.value);
+
+      this.saveConfig();
+      closeModal();
+      this.setStatus('✅ Settings saved', 'connected');
+    });
+  }
+
   private setStatus(message: string, type: 'connected' | 'disconnected' | 'info'): void {
     if (!this.statusElement) return;
     
@@ -271,99 +338,29 @@ export class LeadGenManager {
     }
   }
 
-  public async testConnection(): Promise<void> {
-    this.setButtonLoading('testConnectionBtn', true);
-    this.setStatus('Testing connection...', 'info');
+  public async findStartups(): Promise<void> {
+    this.setButtonLoading('findStartupsBtn', true);
+    this.setWorkflowStatus('Finding new startups using Perplexity AI + Google Search...', 'info');
 
     try {
-      const response = await this.makeRequest('/api/health');
+      const maxStartups = localStorage.getItem('leadgen_maxStartups') || '10';
+
+      const response = await this.makeRequest(`/api/startups?max_companies=${maxStartups}`) as any;
       
-      if (response.status === 'success' || response.status === 'healthy') {
-        this.setStatus('✅ Connected to Lead Generation API', 'connected');
-      } else {
-        this.setStatus('❌ Failed to connect to API', 'disconnected');
-      }
-    } catch (error) {
-      this.setStatus('❌ Connection failed', 'disconnected');
-    } finally {
-      this.setButtonLoading('testConnectionBtn', false);
-    }
-  }
-
-  public async extractData(): Promise<void> {
-    this.setButtonLoading('extractDataBtn', true);
-    this.setWorkflowStatus('Extracting Indian startup funding data from YourStory, Entrackr, Inc42...', 'info');
-
-    try {
-      const minFunding = (document.getElementById('minFunding') as HTMLInputElement)?.value || '5';
-      const maxCompanies = (document.getElementById('maxCompanies') as HTMLInputElement)?.value || '30';
-
-      const response: ExtractResponse = await this.makeRequest('/api/extract', { 
-        method: 'POST',
-        body: JSON.stringify({
-          min_funding_millions: parseInt(minFunding),
-          max_companies: parseInt(maxCompanies)
-        })
-      });
-      
-      if (response.status === 'success') {
-        const message = response.message || 
-          `✅ Extracted ${response.companies_extracted || 0} Indian companies from ${response.articles_processed || 0} articles`;
+      if (response.success) {
+        const message = `✅ Found ${response.count} startups with LinkedIn profiles`;
         this.setWorkflowStatus(message, 'success');
         
-        // Display additional stats for Indian startup extraction
-        if (response.indian_companies !== undefined) {
-          this.setWorkflowStatus(
-            `${message} | Indian companies: ${response.indian_companies} | With funding data: ${response.companies_with_funding_amount || 0}`,
-            'success'
-          );
-        }
-        
-        if (response.output_files && response.output_files.length > 0) {
-          console.log('Output files created:', response.output_files);
-        }
-        
-        this.enableButton('enrichDataBtn');
-        this.refreshFiles();
+        // Display the startups in the preview area
+        this.displayStartupFinderResults(response as SimpleStartupFinderResponse);
       } else {
-        this.setWorkflowStatus(`❌ ${response.error || 'Failed to extract data'}`, 'error');
+        this.setWorkflowStatus('❌ Failed to find startups', 'error');
       }
     } catch (error) {
-      console.error('Extract data error:', error);
-      this.setWorkflowStatus('❌ Failed to extract Indian startup data', 'error');
+      console.error('Find startups error:', error);
+      this.setWorkflowStatus('❌ Failed to find startups', 'error');
     } finally {
-      this.setButtonLoading('extractDataBtn', false);
-    }
-  }
-
-  public async enrichData(): Promise<void> {
-    this.setButtonLoading('enrichDataBtn', true);
-    this.setWorkflowStatus('Enriching company data with contact information...', 'info');
-
-    try {
-      const response: EnrichResponse = await this.makeRequest('/api/enrich', { 
-        method: 'POST',
-        body: JSON.stringify({})
-      });
-      
-      if (response.status === 'success') {
-        const message = response.message || 
-          `✅ Enriched ${response.companies_processed || 0} companies, found ${response.contacts_found || 0} contacts`;
-        this.setWorkflowStatus(message, 'success');
-        
-        if (response.output_files && response.output_files.length > 0) {
-          console.log('Output files created:', response.output_files);
-        }
-        
-        this.refreshFiles();
-      } else {
-        this.setWorkflowStatus(`❌ ${response.error || 'Failed to enrich data'}`, 'error');
-      }
-    } catch (error) {
-      console.error('Enrich data error:', error);
-      this.setWorkflowStatus('❌ Failed to enrich data', 'error');
-    } finally {
-      this.setButtonLoading('enrichDataBtn', false);
+      this.setButtonLoading('findStartupsBtn', false);
     }
   }
 
@@ -512,13 +509,182 @@ export class LeadGenManager {
     `;
   }
 
+  private displayStartupFinderResults(response: SimpleStartupFinderResponse): void {
+    const filesListElement = document.getElementById('filesList');
+    const previewElement = document.getElementById('companiesPreview');
+    
+    if (!filesListElement || !previewElement || !response.data || response.data.length === 0) {
+      if (previewElement) {
+        previewElement.innerHTML = '<p class="text-center text-secondary">No startups found</p>';
+      }
+      return;
+    }
+
+    // Display startup list in the files section (left side)
+    const startupListHTML = `
+      <div style="margin-bottom: 16px; font-weight: 500; color: var(--color-text-secondary);">
+        🔍 Found ${response.count} startups
+      </div>
+      <div class="startup-list">
+        ${response.data.map((startup, index) => `
+          <div class="startup-list-item" data-startup-index="${index}">
+            <div class="startup-list-item-name">${startup.startup_name}</div>
+            <div class="startup-list-item-meta">${startup.founder_name} • ${startup.industry}</div>
+            <div class="startup-list-item-funding">${startup.funding_stage} • ${startup.funding_amount}</div>
+          </div>
+        `).join('')}
+      </div>
+    `;
+
+    filesListElement.innerHTML = startupListHTML;
+
+    // Initially show the first startup in the preview (right side)
+    this.displayStartupDetails(response.data[0], 0);
+
+    // Add click handlers for startup list items
+    const startupItems = filesListElement.querySelectorAll('.startup-list-item');
+    startupItems.forEach((item, index) => {
+      item.addEventListener('click', () => {
+        // Remove active class from all items
+        startupItems.forEach(i => i.classList.remove('active'));
+        // Add active class to clicked item
+        item.classList.add('active');
+        // Display startup details
+        this.displayStartupDetails(response.data[index], index);
+      });
+    });
+
+    // Set first item as active
+    if (startupItems.length > 0) {
+      startupItems[0].classList.add('active');
+    }
+  }
+
+  private displayStartupDetails(startup: any, index: number): void {
+    const previewElement = document.getElementById('companiesPreview');
+    if (!previewElement) return;
+
+    const detailsHTML = `
+      <div class="startup-details-view">
+        <div class="startup-header">
+          <div class="startup-title">
+            <h2>${startup.startup_name}</h2>
+            <div class="startup-meta">
+              <span class="startup-role">${startup.role}</span>
+              <span class="funding-badge" style="background: var(--color-success); color: white; padding: 4px 12px; border-radius: 16px; font-size: var(--font-size-sm); font-weight: var(--font-weight-semibold);">
+                ${startup.funding_stage} • ${startup.funding_amount}
+              </span>
+            </div>
+          </div>
+          <div class="linkedin-actions">
+            <a href="${startup.linkedin_url}" target="_blank" rel="noopener" class="btn btn--primary">
+              👤 Open LinkedIn Profile
+            </a>
+          </div>
+        </div>
+        
+        <div class="startup-info-section">
+          <h3>Company Information</h3>
+          <div class="startup-info-grid">
+            <div class="info-item">
+              <strong>Founder:</strong> ${startup.founder_name}
+            </div>
+            <div class="info-item">
+              <strong>Industry:</strong> ${startup.industry}
+            </div>
+            <div class="info-item">
+              <strong>Funding Stage:</strong> ${startup.funding_stage}
+            </div>
+            <div class="info-item">
+              <strong>Funding Amount:</strong> ${startup.funding_amount}
+            </div>
+            <div class="info-item">
+              <strong>Funding Date:</strong> ${startup.funding_date}
+            </div>
+            <div class="info-item">
+              <strong>Total Funding:</strong> $${startup.total_funding_usd_mil}M USD
+            </div>
+            ${startup.investors !== "Not specified in search results" ? `
+              <div class="info-item">
+                <strong>Investors:</strong> ${startup.investors}
+              </div>
+            ` : ''}
+            ${startup.valuation !== "Undisclosed" ? `
+              <div class="info-item">
+                <strong>Valuation:</strong> ${startup.valuation}
+              </div>
+            ` : ''}
+          </div>
+        </div>
+        
+        ${startup.connect_message ? `
+        <div class="connect-message-section" style="margin-top: 24px; padding: 20px; background: var(--color-surface-secondary); border-radius: 12px; border: 1px solid var(--color-border-subtle);">
+          <h3 style="color: var(--color-primary); display: flex; align-items: center; gap: 8px; margin-bottom: 16px;">
+            💬 LinkedIn Connect Message
+          </h3>
+          <div style="font-style: italic; margin: 12px 0; padding: 16px; background: var(--color-surface); border-radius: 8px; border-left: 4px solid var(--color-primary); line-height: 1.6; font-size: var(--font-size-base);">
+            "${startup.connect_message}"
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 16px;">
+            <div style="font-size: var(--font-size-sm); color: var(--color-text-secondary);">
+              💡 Ready to copy and paste on LinkedIn
+            </div>
+            <button class="btn btn--outline copy-message-btn" data-message="${startup.connect_message?.replace(/"/g, '&quot;') || ''}">
+              📋 Copy Message
+            </button>
+          </div>
+        </div>
+        ` : `
+        <div class="connect-message-section" style="margin-top: 24px; padding: 20px; background: var(--color-surface-secondary); border-radius: 12px; border: 1px solid var(--color-border-subtle); opacity: 0.7;">
+          <h3 style="color: var(--color-text-secondary); display: flex; align-items: center; gap: 8px; margin-bottom: 16px;">
+            💬 LinkedIn Connect Message
+          </h3>
+          <div style="color: var(--color-text-secondary); font-style: italic; text-align: center; padding: 24px;">
+            ❌ No connect message available for this startup
+          </div>
+        </div>
+        `}
+      </div>
+    `;
+
+    previewElement.innerHTML = detailsHTML;
+
+    // Add copy functionality for the message button
+    const copyButton = previewElement.querySelector('.copy-message-btn');
+    if (copyButton) {
+      copyButton.addEventListener('click', async (e) => {
+        const btn = e.target as HTMLButtonElement;
+        const message = btn.getAttribute('data-message');
+        if (message) {
+          try {
+            await navigator.clipboard.writeText(message.replace(/&quot;/g, '"'));
+            btn.textContent = '✅ Copied!';
+            btn.style.background = 'var(--color-success)';
+            btn.style.color = 'white';
+            setTimeout(() => {
+              btn.textContent = '📋 Copy Message';
+              btn.style.background = '';
+              btn.style.color = '';
+            }, 2000);
+          } catch (err) {
+            console.error('Failed to copy message:', err);
+            btn.textContent = '❌ Failed';
+            setTimeout(() => {
+              btn.textContent = '📋 Copy Message';
+            }, 2000);
+          }
+        }
+      });
+    }
+  }
+
   public async completeWorkflow(): Promise<void> {
     this.setButtonLoading('completeWorkflowBtn', true);
     this.setWorkflowStatus('Running complete Indian startup workflow...', 'info');
 
     try {
-      const minFunding = (document.getElementById('minFunding') as HTMLInputElement)?.value || '5';
-      const maxCompanies = (document.getElementById('maxCompanies') as HTMLInputElement)?.value || '30';
+      const minFunding = localStorage.getItem('leadgen_minFunding') || '5';
+      const maxCompanies = localStorage.getItem('leadgen_maxCompanies') || '30';
 
       const response: WorkflowResponse = await this.makeRequest('/api/workflow/complete', { 
         method: 'POST',
@@ -545,8 +711,6 @@ export class LeadGenManager {
           console.log('Output files created:', response.files);
         }
         
-        this.enableButton('extractDataBtn');
-        this.enableButton('enrichDataBtn');
         this.refreshFiles();
       } else {
         this.setWorkflowStatus(`❌ ${response.error || 'Complete workflow failed'}`, 'error');
@@ -563,7 +727,7 @@ export class LeadGenManager {
     this.setButtonLoading('refreshFilesBtn', true);
 
     try {
-      const response = await this.makeRequest('/api/files');
+      const response: FilesResponse = await this.makeRequest('/api/files');
       
       if (response.status === 'success') {
         this.renderFiles(response.files || []);
@@ -600,7 +764,7 @@ export class LeadGenManager {
     for (const [fileType, dateGroups] of Object.entries(organizedFiles)) {
       filesHTML += `
         <div class="file-category">
-          <div class="file-category-header" onclick="this.parentElement.classList.toggle('collapsed')">
+          <div class="file-category-header" data-toggle="category">
             <span class="folder-icon">📁</span>
             <span class="category-name">${this.getFileTypeDisplayName(fileType)}</span>
             <span class="file-count">(${this.getTotalFilesInCategory(dateGroups)})</span>
@@ -617,7 +781,7 @@ export class LeadGenManager {
         if (filesForDate.length > 0) {
           filesHTML += `
             <div class="file-date-group">
-              <div class="file-date-header" onclick="this.parentElement.classList.toggle('collapsed')">
+              <div class="file-date-header" data-toggle="date">
                 <span class="date-icon">📅</span>
                 <span class="date-name">${this.formatDateForDisplay(date)}</span>
                 <span class="file-count">(${filesForDate.length})</span>
@@ -631,13 +795,13 @@ export class LeadGenManager {
           
           for (const file of sortedFiles) {
             filesHTML += `
-              <div class="file-item" onclick="leadGenManager.previewFile('${file.name}')">
+              <div class="file-item" data-filename="${file.name}">
                 <div class="file-info">
                   <div class="file-name">${file.name}</div>
                   <div class="file-meta">${file.size} • ${this.formatDateTime(file.modified)}</div>
                 </div>
                 <div class="file-actions">
-                  <button class="btn btn--outline btn--small" onclick="event.stopPropagation(); leadGenManager.downloadFile('${file.name}')">
+                  <button class="btn btn--outline btn--small download-btn" data-filename="${file.name}">
                     Download
                   </button>
                 </div>
@@ -659,6 +823,56 @@ export class LeadGenManager {
     }
 
     filesListElement.innerHTML = filesHTML;
+
+    // Add event listeners for dropdowns and file actions
+    this.setupFileEventListeners(filesListElement);
+  }
+
+  private setupFileEventListeners(container: HTMLElement): void {
+    // Toggle category dropdowns
+    container.querySelectorAll('[data-toggle="category"]').forEach(header => {
+      header.addEventListener('click', () => {
+        const category = header.parentElement;
+        if (category) {
+          category.classList.toggle('collapsed');
+        }
+      });
+    });
+
+    // Toggle date dropdowns
+    container.querySelectorAll('[data-toggle="date"]').forEach(header => {
+      header.addEventListener('click', () => {
+        const dateGroup = header.parentElement;
+        if (dateGroup) {
+          dateGroup.classList.toggle('collapsed');
+        }
+      });
+    });
+
+    // File preview clicks
+    container.querySelectorAll('.file-item').forEach(item => {
+      item.addEventListener('click', (e) => {
+        // Don't trigger if clicking on download button
+        if ((e.target as HTMLElement).closest('.download-btn')) {
+          return;
+        }
+        const filename = item.getAttribute('data-filename');
+        if (filename) {
+          this.previewFile(filename);
+        }
+      });
+    });
+
+    // Download button clicks
+    container.querySelectorAll('.download-btn').forEach(button => {
+      button.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const filename = button.getAttribute('data-filename');
+        if (filename) {
+          this.downloadFile(filename);
+        }
+      });
+    });
   }
 
   private organizeFilesByTypeAndDate(files: LeadGenFile[]): Record<string, Record<string, LeadGenFile[]>> {
@@ -795,7 +1009,7 @@ export class LeadGenManager {
     }
 
     try {
-      const response = await this.makeRequest(`/api/view/${filename}`);
+      const response: FilePreviewResponse = await this.makeRequest(`/api/view/${filename}`);
       
       if (response.status === 'success') {
         console.log('File preview data:', response.data);
@@ -808,9 +1022,4 @@ export class LeadGenManager {
   }
 }
 
-// Make it globally available
-declare global {
-  interface Window {
-    leadGenManager?: LeadGenManager;
-  }
-}
+
