@@ -162,6 +162,23 @@ export interface SimpleStartupFinderResponse {
   timestamp: string;
 }
 
+export interface NewStartupFinderResponse {
+  success: boolean;
+  count: number;
+  data: Array<{
+    ceo_linkedin: string | null;
+    ceo_name: string;
+    company_name: string;
+    description: string;
+    funding_stage: string;
+    industry: string;
+    linkedin_url: string | null;
+    location: string;
+    total_funding: number;
+  }>;
+  timestamp: string;
+}
+
 export interface FilePreviewResponse extends APIResponse {
   data?: any;
 }
@@ -211,6 +228,28 @@ export class LeadGenManager {
     if (refreshFilesBtn) {
       refreshFilesBtn.addEventListener('click', () => this.refreshFiles());
     }
+
+    // Template functionality
+    const copyTemplateBtn = document.getElementById('copyTemplateBtn');
+    if (copyTemplateBtn) {
+      console.log('Copy template button found, adding listener');
+      copyTemplateBtn.addEventListener('click', async (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        console.log('Copy template button clicked - event triggered');
+        try {
+          await this.copyTemplate();
+        } catch (error) {
+          console.error('Error in copy template:', error);
+          this.showToast('❌ Error copying template', 'error');
+        }
+      });
+    } else {
+      console.error('Copy template button not found!');
+    }
+
+    // Variable tag clicks
+    this.setupVariableTagListeners();
 
     // Cache status elements
     this.statusElement = document.getElementById('connectionStatus');
@@ -352,7 +391,7 @@ export class LeadGenManager {
         this.setWorkflowStatus(message, 'success');
         
         // Display the startups in the preview area
-        this.displayStartupFinderResults(response as SimpleStartupFinderResponse);
+        this.displayNewStartupFinderResults(response as NewStartupFinderResponse);
       } else {
         this.setWorkflowStatus('❌ Failed to find startups', 'error');
       }
@@ -520,43 +559,66 @@ export class LeadGenManager {
       return;
     }
 
-    // Display startup list in the files section (left side)
-    const startupListHTML = `
-      <div style="margin-bottom: 16px; font-weight: 500; color: var(--color-text-secondary);">
+    // Display startup table in the files section
+    const startupTableHTML = `
+      <div style="margin-bottom: 12px; padding: 0 12px; font-weight: 500; color: var(--color-text-secondary);">
         🔍 Found ${response.count} startups
       </div>
-      <div class="startup-list">
-        ${response.data.map((startup, index) => `
-          <div class="startup-list-item" data-startup-index="${index}">
-            <div class="startup-list-item-name">${startup.startup_name}</div>
-            <div class="startup-list-item-meta">${startup.founder_name} • ${startup.industry}</div>
-            <div class="startup-list-item-funding">${startup.funding_stage} • ${startup.funding_amount}</div>
-          </div>
-        `).join('')}
-      </div>
+      <table class="startup-table">
+        <thead class="startup-table-header">
+          <tr>
+            <th style="width: 25%;">Startup</th>
+            <th style="width: 20%;">Founder</th>
+            <th style="width: 20%;">Industry</th>
+            <th style="width: 15%;">Stage</th>
+            <th style="width: 20%;">Funding</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${response.data.map((startup, index) => `
+            <tr class="startup-table-row" data-startup-index="${index}">
+              <td>
+                <div class="startup-name">${startup.startup_name}</div>
+              </td>
+              <td>
+                <div class="founder-name">${startup.founder_name}</div>
+              </td>
+              <td>
+                <div class="industry-tag">${startup.industry}</div>
+              </td>
+              <td>
+                <span class="funding-badge">${startup.funding_stage}</span>
+              </td>
+              <td>
+                <div style="font-size: var(--font-size-xs); font-weight: var(--font-weight-medium);">${startup.funding_amount}</div>
+              </td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
     `;
 
-    filesListElement.innerHTML = startupListHTML;
+    filesListElement.innerHTML = startupTableHTML;
 
-    // Initially show the first startup in the preview (right side)
+    // Initially show the first startup in the preview
     this.displayStartupDetails(response.data[0], 0);
 
-    // Add click handlers for startup list items
-    const startupItems = filesListElement.querySelectorAll('.startup-list-item');
-    startupItems.forEach((item, index) => {
-      item.addEventListener('click', () => {
-        // Remove active class from all items
-        startupItems.forEach(i => i.classList.remove('active'));
-        // Add active class to clicked item
-        item.classList.add('active');
+    // Add click handlers for table rows
+    const startupRows = filesListElement.querySelectorAll('.startup-table-row');
+    startupRows.forEach((row, index) => {
+      row.addEventListener('click', () => {
+        // Remove active class from all rows
+        startupRows.forEach(r => r.classList.remove('active'));
+        // Add active class to clicked row
+        row.classList.add('active');
         // Display startup details
         this.displayStartupDetails(response.data[index], index);
       });
     });
 
-    // Set first item as active
-    if (startupItems.length > 0) {
-      startupItems[0].classList.add('active');
+    // Set first row as active
+    if (startupRows.length > 0) {
+      startupRows[0].classList.add('active');
     }
   }
 
@@ -675,6 +737,149 @@ export class LeadGenManager {
           }
         }
       });
+    }
+  }
+
+  private displayNewStartupFinderResults(response: NewStartupFinderResponse): void {
+    const filesListElement = document.getElementById('filesList');
+    const resultsContainer = document.querySelector('.results-container');
+    
+    if (!filesListElement || !resultsContainer || !response.data || response.data.length === 0) {
+      if (filesListElement) {
+        filesListElement.innerHTML = '<p class="text-center text-secondary">No startups found</p>';
+      }
+      return;
+    }
+
+    // Switch to table-only mode
+    resultsContainer.classList.add('table-only');
+
+    // Display startup table with new data structure
+    const startupTableHTML = `
+      <div style="margin-bottom: 12px; padding: 0 12px; font-weight: 500; color: var(--color-text-secondary);">
+        🔍 Found ${response.count} Indian startups • Last updated: ${new Date(response.timestamp).toLocaleString()}
+      </div>
+      <table class="startup-table">
+        <thead class="startup-table-header">
+          <tr>
+            <th style="width: 18%;">Company</th>
+            <th style="width: 12%;">CEO</th>
+            <th style="width: 18%;">Industry</th>
+            <th style="width: 12%;">Location</th>
+            <th style="width: 8%;">Stage</th>
+            <th style="width: 8%;">Funding</th>
+            <th style="width: 12%;">LinkedIn</th>
+            <th style="width: 12%;">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${response.data.map((startup, index) => `
+            <tr class="startup-table-row" data-startup-index="${index}">
+              <td>
+                <div class="startup-name">${startup.company_name}</div>
+                <div class="company-description" title="${startup.description}">${startup.description}</div>
+              </td>
+              <td>
+                <div class="founder-name">${startup.ceo_name}</div>
+              </td>
+              <td>
+                <div class="industry-tag">${startup.industry}</div>
+              </td>
+              <td>
+                <div class="location-tag">${startup.location}</div>
+              </td>
+              <td>
+                <span class="funding-badge">${startup.funding_stage}</span>
+              </td>
+              <td>
+                <div class="funding-amount">$${startup.total_funding}M</div>
+              </td>
+              <td>
+                ${startup.ceo_linkedin 
+                  ? `<a href="${startup.ceo_linkedin}" target="_blank" class="btn btn--outline btn--small linkedin-btn">👤 Profile</a>`
+                  : '<span class="text-muted" style="font-size: var(--font-size-xs);">Not found</span>'
+                }
+              </td>
+              <td>
+                <button class="btn btn--outline btn--small copy-template-btn" data-startup-index="${index}">
+                  📋 Copy
+                </button>
+              </td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    `;
+
+    filesListElement.innerHTML = startupTableHTML;
+
+    // Add click handlers for table rows
+    const startupRows = filesListElement.querySelectorAll('.startup-table-row');
+    startupRows.forEach((row, index) => {
+      row.addEventListener('click', async () => {
+        // Remove selected class from all rows
+        startupRows.forEach(r => r.classList.remove('selected'));
+        // Add selected class to clicked row
+        row.classList.add('selected');
+        // Fill and copy template
+        await this.fillAndCopyTemplate(response.data[index]);
+      });
+    });
+
+    // Add click handlers for copy buttons
+    const copyButtons = filesListElement.querySelectorAll('.copy-template-btn');
+    copyButtons.forEach((button, index) => {
+      button.addEventListener('click', async (e) => {
+        e.stopPropagation(); // Prevent row click
+        await this.fillAndCopyTemplate(response.data[index]);
+        
+        // Visual feedback for button
+        const btn = e.target as HTMLButtonElement;
+        const originalText = btn.textContent;
+        btn.textContent = '✅ Copied!';
+        btn.style.background = 'var(--color-success)';
+        btn.style.color = 'white';
+        setTimeout(() => {
+          btn.textContent = originalText;
+          btn.style.background = '';
+          btn.style.color = '';
+        }, 2000);
+      });
+    });
+  }
+
+  private async fillAndCopyTemplate(startup: any): Promise<void> {
+    const templateTextarea = document.getElementById('templateTextarea') as HTMLTextAreaElement;
+    if (!templateTextarea) {
+      this.showToast('❌ Template not found', 'error');
+      return;
+    }
+
+    let template = templateTextarea.value.trim();
+    if (!template) {
+      this.showToast('❌ Please enter a template message first', 'error');
+      return;
+    }
+    
+    // Replace variables with actual data using correct property names
+    template = template.replace(/{founder_name}/g, startup.founder_name || 'there');
+    template = template.replace(/{company_name}/g, startup.startup_name || 'your company');
+    template = template.replace(/{industry}/g, startup.industry || 'your industry');
+    template = template.replace(/{location}/g, startup.location || 'your location');
+    template = template.replace(/{funding_amount}/g, startup.funding_amount || 'your recent funding');
+
+    console.log('Template before replacement:', templateTextarea.value);
+    console.log('Startup data:', startup);
+    console.log('Template after replacement:', template);
+
+    // Copy to clipboard
+    const success = await this.copyToClipboard(template);
+    if (success) {
+      this.showToast(`✅ Template copied! Message ready for ${startup.founder_name} at ${startup.startup_name}`, 'success');
+      console.log('Copied personalized template:', template);
+    } else {
+      this.showToast('❌ Failed to copy template', 'error');
+      console.error('All copy methods failed');
     }
   }
 
@@ -1019,6 +1224,163 @@ export class LeadGenManager {
     } catch (error) {
       console.error('Preview failed:', error);
     }
+  }
+
+  // Template functionality
+  public async copyTemplate(): Promise<void> {
+    const templateTextarea = document.getElementById('templateTextarea') as HTMLTextAreaElement;
+    if (!templateTextarea) {
+      console.error('Template textarea not found');
+      this.showToast('❌ Template not found', 'error');
+      return;
+    }
+
+    const template = templateTextarea.value.trim();
+    if (!template) {
+      this.showToast('❌ Please enter a template message first', 'error');
+      return;
+    }
+
+    // Try to copy to clipboard
+    const success = await this.copyToClipboard(template);
+    if (success) {
+      this.showToast('✅ Template copied to clipboard!', 'success');
+      console.log('Template copied successfully');
+    } else {
+      this.showToast('❌ Failed to copy template', 'error');
+      console.error('All copy methods failed');
+    }
+  }
+
+  private async copyToClipboard(text: string): Promise<boolean> {
+    // Method 1: Modern clipboard API
+    try {
+      await navigator.clipboard.writeText(text);
+      console.log('Copied using clipboard API');
+      return true;
+    } catch (error) {
+      console.warn('Clipboard API failed:', error);
+    }
+
+    // Method 2: Document execCommand (fallback)
+    try {
+      const textArea = document.createElement('textarea');
+      textArea.value = text;
+      textArea.style.position = 'absolute';
+      textArea.style.left = '-9999px';
+      textArea.style.top = '-9999px';
+      document.body.appendChild(textArea);
+      textArea.focus();
+      textArea.select();
+      
+      const successful = document.execCommand('copy');
+      document.body.removeChild(textArea);
+      
+      if (successful) {
+        console.log('Copied using execCommand');
+        return true;
+      }
+    } catch (error) {
+      console.warn('ExecCommand failed:', error);
+    }
+
+    // Method 3: Select existing textarea and copy
+    try {
+      const templateTextarea = document.getElementById('templateTextarea') as HTMLTextAreaElement;
+      if (templateTextarea) {
+        templateTextarea.focus();
+        templateTextarea.select();
+        const successful = document.execCommand('copy');
+        if (successful) {
+          console.log('Copied by selecting textarea');
+          return true;
+        }
+      }
+    } catch (error) {
+      console.warn('Textarea select copy failed:', error);
+    }
+
+    return false;
+  }
+
+  private setupVariableTagListeners(): void {
+    // Wait for DOM to be ready, then setup listeners
+    setTimeout(() => {
+      const variableTags = document.querySelectorAll('.variable-tag');
+      variableTags.forEach(tag => {
+        tag.addEventListener('click', (e) => {
+          const variable = (e.target as HTMLElement).getAttribute('data-variable');
+          if (variable) {
+            this.insertVariableIntoTemplate(variable);
+          }
+        });
+      });
+    }, 100);
+  }
+
+  private insertVariableIntoTemplate(variable: string): void {
+    const templateTextarea = document.getElementById('templateTextarea') as HTMLTextAreaElement;
+    if (!templateTextarea) return;
+
+    const startPos = templateTextarea.selectionStart;
+    const endPos = templateTextarea.selectionEnd;
+    const currentValue = templateTextarea.value;
+
+    const newValue = currentValue.substring(0, startPos) + variable + currentValue.substring(endPos);
+    templateTextarea.value = newValue;
+
+    // Move cursor to after the inserted variable
+    const newCursorPos = startPos + variable.length;
+    templateTextarea.setSelectionRange(newCursorPos, newCursorPos);
+    templateTextarea.focus();
+
+    this.showToast(`Added ${variable} to template`, 'success');
+  }
+
+  private showToast(message: string, type: 'success' | 'error' | 'info' = 'info'): void {
+    // Remove any existing toasts first
+    const existingToasts = document.querySelectorAll('.toast');
+    existingToasts.forEach(toast => {
+      if (toast.parentNode) {
+        toast.parentNode.removeChild(toast);
+      }
+    });
+
+    // Create new toast
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.textContent = message;
+    
+    // Initial hidden state
+    toast.style.cssText = `
+      opacity: 0;
+      transform: translateY(20px);
+      transition: all 0.3s ease;
+    `;
+
+    // Add to body
+    document.body.appendChild(toast);
+
+    // Show toast with animation
+    requestAnimationFrame(() => {
+      toast.style.opacity = '1';
+      toast.style.transform = 'translateY(0)';
+    });
+
+    // Auto-hide toast after 3 seconds
+    setTimeout(() => {
+      if (toast && toast.parentNode) {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(-20px)';
+        
+        // Remove from DOM after animation
+        setTimeout(() => {
+          if (toast && toast.parentNode) {
+            toast.parentNode.removeChild(toast);
+          }
+        }, 300);
+      }
+    }, 3000);
   }
 }
 

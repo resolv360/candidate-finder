@@ -95,12 +95,31 @@
             </div>
 
             <!-- Lead Generation Content View -->
-            <div class="content-view" id="leadgenView">
+            <div class="content-view hidden" id="leadgenView">
                 <div class="leadgen-container">
                     <!-- Status Messages at Top -->
                     <div class="leadgen-status-top">
                         <div class="connection-status" id="connectionStatus"></div>
                         <div class="workflow-status" id="workflowStatus"></div>
+                    </div>
+
+                    <!-- Template Editor Section -->
+                    <div class="template-editor-section">
+                        <div class="template-header">
+                            <h3>📝 LinkedIn Connect Message Template</h3>
+                            <button class="btn btn--primary btn--small" id="copyTemplateBtn">📋 Copy Template</button>
+                        </div>
+                        <div class="template-editor">
+                            <textarea class="template-textarea" id="templateTextarea" placeholder="Hi {founder_name}, I'm interested in {company_name}. Would love to connect!">Hi {founder_name}, I'm interested in {company_name}. Would love to connect!</textarea>
+                            <div class="template-variables">
+                                <span class="variables-label">Variables:</span>
+                                <span class="variable-tag" data-variable="{founder_name}">{founder_name}</span>
+                                <span class="variable-tag" data-variable="{company_name}">{company_name}</span>
+                                <span class="variable-tag" data-variable="{industry}">{industry}</span>
+                                <span class="variable-tag" data-variable="{location}">{location}</span>
+                                <span class="variable-tag" data-variable="{funding_amount}">{funding_amount}</span>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- Results Section -->
