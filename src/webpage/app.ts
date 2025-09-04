@@ -108,7 +108,7 @@ class WorkspaceManager {
     }
 
     const downloadCSVBtn = document.getElementById(
-      "downloadCsvBtn"
+      "workspaceDownloadCsvBtn"
     ) as HTMLButtonElement | null;
     if (downloadCSVBtn) {
       downloadCSVBtn.onclick = (e) => {
@@ -148,7 +148,7 @@ class WorkspaceManager {
     });
 
     const templateTextarea = document.getElementById(
-      "templateTextarea"
+      "workspaceTemplateTextarea"
     ) as HTMLTextAreaElement | null;
     if (templateTextarea) {
       templateTextarea.addEventListener("change", (e) =>
@@ -237,8 +237,10 @@ class WorkspaceManager {
           // Show lead generation view and initialize manager
           document.getElementById('leadgenView')?.classList.add('active');
           if (!window.leadGenManager) {
-            window.leadGenManager = new LeadGenManager();
+            window.leadGenManager = LeadGenManager.getInstance();
           }
+          // Setup variable listeners after view is active
+          window.leadGenManager.setupVariableListeners();
         }
       });
     });
@@ -359,7 +361,7 @@ class WorkspaceManager {
 
   private renderTemplate(workspace: Workspace): void {
     const templateTextarea = document.getElementById(
-      "templateTextarea"
+      "workspaceTemplateTextarea"
     ) as HTMLTextAreaElement | null;
     if (!templateTextarea) {
       console.error("Template textarea not found");

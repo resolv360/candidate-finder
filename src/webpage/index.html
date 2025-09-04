@@ -40,10 +40,7 @@
             <div class="nav-content" id="leadgenSection">
                 <div class="sidebar-actions">
                     <button class="btn btn--outline btn--full-width" id="leadgenSettingsBtn">
-                        ⚙️ Lead Settings
-                    </button>
-                    <button class="btn btn--primary btn--full-width" id="completeWorkflowBtn">
-                        ⚡ Complete Workflow
+                        ⚙️ AI Finder Settings
                     </button>
                     <button class="btn btn--accent btn--full-width" id="findStartupsBtn">
                         🔍 AI Startup Finder
@@ -73,7 +70,7 @@
                         </div>
                         <div id="candidatesActions">
                             <button id="openNext5Btn" style="padding: 10px 2px">Open next 5</button>
-                            <button id="downloadCsvBtn" style="padding: 10px 2px">Download CSV ⬇️</button>
+                            <button id="workspaceDownloadCsvBtn" style="padding: 10px 2px">Download CSV ⬇️</button>
                         </div>
                         <div class="profiles-list" id="profilesList">
                             <!-- Profiles will be populated here -->
@@ -87,7 +84,7 @@
                         </div>
                         <textarea 
                             class="form-control template-textarea" 
-                            id="templateTextarea"
+                            id="workspaceTemplateTextarea"
                             placeholder="Enter your message template here..."
                         ></textarea>
                     </div>
@@ -103,14 +100,25 @@
                         <div class="workflow-status" id="workflowStatus"></div>
                     </div>
 
+                    <!-- AI Runs Management -->
+                    <div class="ai-runs-section">
+                        <div class="ai-runs-header">
+                            <span>🗂️ Runs:</span>
+                            <select id="aiRunsSelect" class="ai-runs-select">
+                                <option value="">Current Run</option>
+                            </select>
+                            <button class="btn btn--outline btn--small" id="clearRuns">Clear All</button>
+                        </div>
+                    </div>
+
                     <!-- Template Editor Section -->
                     <div class="template-editor-section">
                         <div class="template-header">
-                            <h3>📝 LinkedIn Connect Message Template</h3>
-                            <button class="btn btn--primary btn--small" id="copyTemplateBtn">📋 Copy Template</button>
+                            <h3>� Template</h3>
+                            <button class="btn btn--primary btn--small" id="leadgenCopyTemplateBtn">📋 Copy</button>
                         </div>
                         <div class="template-editor">
-                            <textarea class="template-textarea" id="templateTextarea" placeholder="Hi {founder_name}, I'm interested in {company_name}. Would love to connect!">Hi {founder_name}, I'm interested in {company_name}. Would love to connect!</textarea>
+                            <textarea class="template-textarea" id="leadgenTemplateTextarea" placeholder="Hi {founder_name}, I'm interested in {company_name}. Would love to connect!">Hi {founder_name}, I'm interested in {company_name}. Would love to connect!</textarea>
                             <div class="template-variables">
                                 <span class="variables-label">Variables:</span>
                                 <span class="variable-tag" data-variable="{founder_name}">{founder_name}</span>
@@ -124,17 +132,8 @@
 
                     <!-- Results Section -->
                     <div class="section">
-                        <div class="section-header">
-                            <h3>🇮🇳 Indian Startup Lead Generation Results</h3>
-                            <button class="btn btn--outline btn--small" id="refreshFilesBtn">Refresh Files</button>
-                        </div>
-                        <div class="results-container">
-                            <div class="files-list" id="filesList">
-                                <!-- Files will be populated here -->
-                            </div>
-                            <div class="companies-preview" id="companiesPreview">
-                                <!-- Company data preview will be shown here -->
-                            </div>
+                        <div class="results-container" id="resultsContainer">
+                            <!-- Startup results will be populated here -->
                         </div>
                     </div>
                 </div>
@@ -205,32 +204,20 @@
         <div class="modal-backdrop" id="leadSettingsBackdrop"></div>
         <div class="modal-content">
             <div class="modal-header">
-                <h3>🇮🇳 Lead Generation Settings</h3>
+                <h3>🤖 AI Startup Finder Settings</h3>
                 <button class="modal-close" id="leadSettingsClose">&times;</button>
             </div>
             <form id="leadSettingsForm">
                 <div class="modal-body">
                     <div class="form-group">
                         <label class="form-label" for="apiBaseUrl">API Base URL</label>
-                        <input type="text" class="form-control" id="apiBaseUrl" value="http://localhost:5000" placeholder="http://localhost:5000">
+                        <input type="text" class="form-control" id="apiBaseUrl" value="http://localhost:5000/" placeholder="http://localhost:5000/">
                         <small class="form-help">Base URL for the Indian startup API</small>
                     </div>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label class="form-label" for="minFunding">Minimum Funding (USD Millions)</label>
-                            <input type="number" class="form-control" id="minFunding" value="5" min="0" max="1000" placeholder="5">
-                            <small class="form-help">Filter companies by minimum funding amount</small>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label" for="maxCompanies">Maximum Companies</label>
-                            <input type="number" class="form-control" id="maxCompanies" value="30" min="5" max="100" placeholder="30">
-                            <small class="form-help">Limit the number of companies to extract</small>
-                        </div>
-                    </div>
                     <div class="form-group">
-                        <label class="form-label" for="maxStartups">Maximum Startups to Find (AI Finder)</label>
-                        <input type="number" class="form-control" id="maxStartups" value="10" min="1" max="20" placeholder="10">
-                        <small class="form-help">Find up to 20 new startups with LinkedIn profiles using AI</small>
+                        <label class="form-label" for="maxStartups">Maximum Startups to Find</label>
+                        <input type="number" class="form-control" id="maxStartups" value="10" min="1" max="200" placeholder="10">
+                        <small class="form-help">Find up to 200 new startups with LinkedIn profiles using AI</small>
                     </div>
                 </div>
                 <div class="modal-footer">
