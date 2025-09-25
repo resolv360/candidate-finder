@@ -9,7 +9,10 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "types": ["chrome", "node"],
-    "sourceMap": true
+    "sourceMap": true,
+    "jsx": "react-jsx",
+    "allowJs": true,
+    "allowSyntheticDefaultImports": true
   },
   "include": ["src/**/*"]
 }

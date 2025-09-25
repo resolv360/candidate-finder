@@ -14,22 +14,17 @@ export function getDefaultWorkspaceManagerData(): WorkspaceManagerData {
 
 export function fetchWorkspaceData(): Promise<WorkspaceManagerData> {
   return new Promise((resolve) => {
-    chrome.storage.local.get(["workspaceManagerData"], (result) => {
-      if (chrome.runtime.lastError) {
-        console.error(
-          "Error getting data from chrome.storage:",
-          chrome.runtime.lastError
-        );
+    try {
+      const data = localStorage.getItem('workspaceManagerData');
+      if (data) {
+        resolve(JSON.parse(data));
+      } else {
         resolve(getDefaultWorkspaceManagerData());
-        return;
       }
-
-      resolve(
-        result.workspaceManagerData
-          ? result.workspaceManagerData
-          : getDefaultWorkspaceManagerData()
-      );
-    });
+    } catch (error) {
+      console.error('Error getting data from localStorage:', error);
+      resolve(getDefaultWorkspaceManagerData());
+    }
   });
 }
 

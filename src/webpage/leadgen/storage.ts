@@ -1,15 +1,15 @@
-import { AIStartupRun, AIRunsStorage } from './types';
+import { AIRunsStorage, AIStartupRun } from './types';
 
 export class AIRunsManager {
   private static readonly STORAGE_KEY = 'ai_startup_runs';
 
   /**
-   * Load all AI runs from Chrome storage
+   * Load all AI runs from localStorage
    */
   static async loadAIRuns(): Promise<AIStartupRun[]> {
     try {
-      const result = await chrome.storage.local.get([this.STORAGE_KEY]);
-      const storage: AIRunsStorage = result[this.STORAGE_KEY] || { runs: [] };
+      const data = localStorage.getItem(this.STORAGE_KEY);
+      const storage: AIRunsStorage = data ? JSON.parse(data) : { runs: [] };
       return storage.runs;
     } catch (error) {
       console.error('Error loading AI runs:', error);
@@ -18,12 +18,12 @@ export class AIRunsManager {
   }
 
   /**
-   * Save AI runs to Chrome storage
+   * Save AI runs to localStorage
    */
   static async saveAIRuns(runs: AIStartupRun[]): Promise<void> {
     try {
       const storage: AIRunsStorage = { runs };
-      await chrome.storage.local.set({ [this.STORAGE_KEY]: storage });
+      localStorage.setItem(this.STORAGE_KEY, JSON.stringify(storage));
     } catch (error) {
       console.error('Error saving AI runs:', error);
       throw error;

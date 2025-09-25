@@ -1,12 +1,15 @@
 import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react";
 
 export default defineConfig({
+  plugins: [react()],
   build: {
     outDir: "dist",
     assetsDir: "",
     rollupOptions: {
       input: {
-        app: "src/webpage/app.ts",
+        main: "src/main.tsx",
+        index: "index.html",
         background: "src/background.ts",
         "content-script": "src/content-script.ts",
       },

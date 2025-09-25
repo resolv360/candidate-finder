@@ -6,8 +6,9 @@ export class APIManager {
    */
   static async findIndianStartups(maxStartups: number = 10): Promise<NewStartupFinderResponse> {
     try {
-      // Get API URL from settings
-      const apiUrl = localStorage.getItem('leadgen_apiUrl');
+      // Get API URL from settings with fallback
+      const apiUrl = localStorage.getItem('leadgen_apiUrl') || 'http://localhost:5000';
+      console.log('Using API URL:', apiUrl);
       
       const response = await fetch(`${apiUrl}/api/startups?max_companies=${maxStartups}`);
 

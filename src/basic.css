@@ -1,0 +1,552 @@
+/* Basic App Styles */
+.app-container {
+  display: flex;
+  height: 100vh;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+}
+
+.sidebar {
+  width: 300px;
+  background: #f8f9fa;
+  border-right: 1px solid #e9ecef;
+  display: flex;
+  flex-direction: column;
+}
+
+.main-content {
+  flex: 1;
+  background: #ffffff;
+  overflow-y: auto;
+}
+
+.welcome-message {
+  text-align: center;
+  padding: 100px 20px;
+}
+
+.welcome-message h2 {
+  color: #1a202c;
+  margin-bottom: 20px;
+}
+
+.welcome-message p {
+  color: #718096;
+  font-size: 16px;
+}
+
+/* Navigation */
+.sidebar-navigation {
+  padding: 20px;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.nav-tab {
+  display: block;
+  width: 100%;
+  padding: 12px 16px;
+  margin-bottom: 8px;
+  border: none;
+  background: transparent;
+  color: #718096;
+  text-align: left;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.nav-tab:hover {
+  background: #e9ecef;
+}
+
+.nav-tab.active {
+  background: #3182ce;
+  color: white;
+}
+
+.nav-content {
+  display: none;
+  padding: 20px;
+}
+
+.nav-content.active {
+  display: block;
+}
+
+/* Buttons */
+.btn {
+  padding: 8px 16px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s ease;
+}
+
+.btn--primary {
+  background: #3182ce;
+  color: white;
+  border-color: #3182ce;
+}
+
+.btn--primary:hover {
+  background: #2c5282;
+}
+
+.btn--outline {
+  background: transparent;
+  color: #718096;
+  border-color: #cbd5e0;
+}
+
+.btn--outline:hover {
+  background: #f7fafc;
+}
+
+.btn--accent {
+  background: #ed8936;
+  color: white;
+  border-color: #ed8936;
+}
+
+.btn--accent:hover {
+  background: #dd6b20;
+}
+
+.btn--full-width {
+  width: 100%;
+}
+
+.btn--small {
+  padding: 6px 12px;
+  font-size: 12px;
+}
+
+/* Sidebar Actions */
+.sidebar-actions {
+  margin-bottom: 20px;
+}
+
+.sidebar-actions .btn {
+  margin-bottom: 8px;
+}
+
+.workspace-list {
+  flex: 1;
+}
+
+/* Content Views */
+.content-view {
+  display: none;
+  padding: 20px;
+}
+
+.content-view.active {
+  display: block;
+}
+
+.hidden {
+  display: none !important;
+}
+
+/* Workspace Content */
+.workspace-content-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  height: calc(100vh - 40px);
+}
+
+.profiles-section,
+.template-section {
+  background: white;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.section-header h3 {
+  margin: 0;
+  color: #1a202c;
+}
+
+.profile-count {
+  color: #718096;
+  font-size: 14px;
+}
+
+/* Form Controls */
+.form-control {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #cbd5e0;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.form-control:focus {
+  outline: none;
+  border-color: #3182ce;
+  box-shadow: 0 0 0 2px rgba(49, 130, 206, 0.2);
+}
+
+.template-textarea {
+  width: 100%;
+  min-height: 120px;
+  resize: vertical;
+}
+
+/* Modals */
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-backdrop {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.modal-content {
+  position: relative;
+  background: white;
+  border-radius: 8px;
+  max-width: 500px;
+  width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.modal-header h3 {
+  margin: 0;
+  color: #1a202c;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: #718096;
+}
+
+.modal-body {
+  padding: 20px;
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 20px;
+  border-top: 1px solid #e9ecef;
+}
+
+/* Form Groups */
+.form-group {
+  margin-bottom: 16px;
+}
+
+.form-label {
+  display: block;
+  margin-bottom: 4px;
+  color: #1a202c;
+  font-weight: 500;
+}
+
+.form-help {
+  display: block;
+  margin-top: 4px;
+  color: #718096;
+  font-size: 12px;
+}
+
+/* Lead Generation Styles */
+.leadgen-container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.leadgen-status-top {
+  margin-bottom: 20px;
+}
+
+.ai-runs-section {
+  background: white;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 20px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.ai-runs-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.ai-runs-select {
+  padding: 4px 8px;
+  border: 1px solid #cbd5e0;
+  border-radius: 4px;
+}
+
+.template-editor-section {
+  background: white;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.template-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.template-variables {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #e9ecef;
+}
+
+.variables-label {
+  font-weight: 500;
+  color: #718096;
+  margin-right: 8px;
+}
+
+.variable-tag {
+  display: inline-block;
+  background: #3182ce;
+  color: white;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 12px;
+  margin-right: 8px;
+  cursor: pointer;
+}
+
+.variable-tag:hover {
+  background: #2c5282;
+}
+
+.results-container {
+  background: white;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* Toast Notifications */
+.toast {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  padding: 12px 16px;
+  border-radius: 6px;
+  color: white;
+  font-weight: 500;
+  z-index: 1000;
+  opacity: 1;
+  transform: translateY(0);
+  transition: all 0.3s ease;
+}
+
+.toast.success {
+  background-color: #48bb78;
+}
+
+.toast.error {
+  background-color: #f56565;
+}
+
+.toast.info {
+  background-color: #4299e1;
+}
+
+/* Startup Table Styles */
+.startup-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.startup-table-header th {
+  background: #f8f9fa;
+  padding: 12px 8px;
+  text-align: left;
+  font-weight: 600;
+  color: #1a202c;
+  border-bottom: 1px solid #e9ecef;
+  font-size: 14px;
+}
+
+.startup-table-row {
+  border-bottom: 1px solid #e9ecef;
+}
+
+.startup-table-row:hover {
+  background: #f8f9fa;
+}
+
+.startup-table-row td {
+  padding: 12px 8px;
+  vertical-align: top;
+  font-size: 14px;
+}
+
+.startup-name {
+  font-weight: 600;
+  color: #1a202c;
+  margin-bottom: 4px;
+}
+
+.founder-name {
+  color: #4a5568;
+}
+
+.industry-tag,
+.location-tag {
+  background: #e2e8f0;
+  color: #4a5568;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+}
+
+.funding-badge {
+  background: #c6f6d5;
+  color: #22543d;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.funding-amount {
+  font-weight: 600;
+  color: #1a202c;
+}
+
+.linkedin-link {
+  color: #0077b5;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.linkedin-link:hover {
+  text-decoration: underline;
+}
+
+.text-muted {
+  color: #a0aec0;
+  font-style: italic;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.text-secondary {
+  color: #718096;
+}
+
+/* Toast Notifications */
+.toast {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  padding: 12px 20px;
+  border-radius: 6px;
+  color: white;
+  font-weight: 500;
+  z-index: 10000;
+  max-width: 400px;
+  word-wrap: break-word;
+}
+
+.toast.success {
+  background: #38a169;
+}
+
+.toast.error {
+  background: #e53e3e;
+}
+
+.toast.info {
+  background: #3182ce;
+}
+
+/* Startup Results */
+.startup-result {
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 12px;
+  background: white;
+}
+
+.startup-result h4 {
+  margin: 0 0 8px 0;
+  color: #1a202c;
+  font-size: 16px;
+}
+
+.startup-result p {
+  margin: 4px 0;
+  color: #718096;
+  font-size: 14px;
+}
+
+.startup-result .founder {
+  font-weight: 500;
+  color: #2d3748;
+}
+
+.startup-result .company {
+  font-weight: 500;
+  color: #3182ce;
+}
+
+.startup-result .actions {
+  margin-top: 12px;
+  display: flex;
+  gap: 8px;
+}
+
+.startup-result .btn {
+  padding: 6px 12px;
+  font-size: 12px;
+}

@@ -1,7 +1,8 @@
-import { NewStartupFinderResponse } from './types';
-import { APIManager } from './api-manager';
-import { UIManager, TemplateManager } from './ui-manager';
+import { TemplateManager, UIManager } from './ui-manager';
+
 import { AIRunsManager } from './storage';
+import { APIManager } from './api-manager';
+import { NewStartupFinderResponse } from './types';
 
 export class LeadGenManager {
   private static instance: LeadGenManager | null = null;
@@ -236,7 +237,7 @@ export class LeadGenManager {
    */
   private async loadSettings(): Promise<void> {
     const modal = document.getElementById('leadSettingsModal');
-    const apiUrlInput = modal?.querySelector('#apiUrl') as HTMLInputElement;
+    const apiUrlInput = modal?.querySelector('#apiBaseUrl') as HTMLInputElement;
     const maxStartupsInput = modal?.querySelector('#maxStartups') as HTMLInputElement;
 
     if (apiUrlInput) apiUrlInput.value = localStorage.getItem('leadgen_apiUrl') || 'http://localhost:5000/';

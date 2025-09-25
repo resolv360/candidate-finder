@@ -12,7 +12,7 @@ import { searchCandidates } from "./candidate-search";
 
 let tempNewWorkspaceData: Partial<Workspace> | null = null;
 
-class WorkspaceManager {
+export class WorkspaceManager {
   data: WorkspaceManagerData = getDefaultWorkspaceManagerData();
   private nextWorkspaceId: number;
   private nextProfileId: number;
@@ -30,16 +30,12 @@ class WorkspaceManager {
   }
 
   saveToLocalStorage(): void {
-    chrome.storage.local.set({ workspaceManagerData: this.data }, () => {
-      if (chrome.runtime.lastError) {
-        console.error(
-          "Error saving to chrome.storage:",
-          chrome.runtime.lastError
-        );
-      } else {
-        console.log("Data successfully saved to chrome.storage");
-      }
-    });
+    try {
+      localStorage.setItem('workspaceManagerData', JSON.stringify(this.data));
+      console.log("Data successfully saved to localStorage");
+    } catch (error) {
+      console.error("Error saving to localStorage:", error);
+    }
   }
 
   fetchFromLocalStorage(): Promise<WorkspaceManagerData> {
@@ -51,10 +47,36 @@ class WorkspaceManager {
     this.bindStaticEvents();
     this.bindTabEvents();
     this.renderWorkspaceList();
+    this.setInitialViewState();
     console.log("WorkspaceManager initialized successfully");
   }
 
-  private openNext5Workspaces(): void {
+  private setInitialViewState(): void {
+    // Set the initial view state based on whether workspaces exist
+    const currentWorkspace = this.getWorkspaceById(this.data.currentWorkspaceId);
+    const workspaceContent = document.getElementById('workspaceContent');
+    const workspaceView = document.getElementById('workspaceView');
+
+    if (currentWorkspace && workspaceContent) {
+      // Hide welcome view and show workspace content
+      if (workspaceView) {
+        workspaceView.classList.add('hidden');
+        workspaceView.classList.remove('active');
+      }
+      workspaceContent.classList.remove('hidden');
+      workspaceContent.classList.add('active');
+    } else if (workspaceView) {
+      // Show welcome view (already active by default)
+      workspaceView.classList.remove('hidden');
+      workspaceView.classList.add('active');
+      if (workspaceContent) {
+        workspaceContent.classList.add('hidden');
+        workspaceContent.classList.remove('active');
+      }
+    }
+  }
+
+  public openNext5Workspaces(): void {
     console.log("Opening next 5 workspaces...");
     const workspace = this.getWorkspaceById(this.data.currentWorkspaceId);
     if (!workspace) return;
@@ -69,7 +91,7 @@ class WorkspaceManager {
     });
   }
 
-  private downloadCSV() {
+  public downloadCSV() {
     const workspace = this.getWorkspaceById(this.data.currentWorkspaceId);
     if (!workspace) return;
 
@@ -212,8 +234,15 @@ class WorkspaceManager {
 
         // Remove active class from all nav tabs and contents
         navTabs.forEach(btn => btn.classList.remove('active'));
-        navContents.forEach(content => content.classList.remove('active'));
-        contentViews.forEach(view => view.classList.remove('active'));
+        navContents.forEach(content => {
+          content.classList.remove('active');
+        });
+        
+        // Hide all content views (add hidden, remove active)
+        contentViews.forEach(view => {
+          view.classList.add('hidden');
+          view.classList.remove('active');
+        });
 
         // Add active class to clicked tab and corresponding content
         target.classList.add('active');
@@ -229,18 +258,30 @@ class WorkspaceManager {
           // Show workspaces view
           const currentWorkspace = this.getWorkspaceById(this.data.currentWorkspaceId);
           if (currentWorkspace) {
-            document.getElementById('workspaceContent')?.classList.add('active');
+            const workspaceContent = document.getElementById('workspaceContent');
+            if (workspaceContent) {
+              workspaceContent.classList.remove('hidden');
+              workspaceContent.classList.add('active');
+            }
           } else {
-            document.getElementById('workspaceView')?.classList.add('active');
+            const workspaceView = document.getElementById('workspaceView');
+            if (workspaceView) {
+              workspaceView.classList.remove('hidden');
+              workspaceView.classList.add('active');
+            }
           }
         } else if (viewName === 'leadgen') {
           // Show lead generation view and initialize manager
-          document.getElementById('leadgenView')?.classList.add('active');
-          if (!window.leadGenManager) {
-            window.leadGenManager = LeadGenManager.getInstance();
+          const leadgenView = document.getElementById('leadgenView');
+          if (leadgenView) {
+            leadgenView.classList.remove('hidden');
+            leadgenView.classList.add('active');
+            if (!window.leadGenManager) {
+              window.leadGenManager = LeadGenManager.getInstance();
+            }
+            // Setup variable listeners after view is active
+            window.leadGenManager.setupVariableListeners();
           }
-          // Setup variable listeners after view is active
-          window.leadGenManager.setupVariableListeners();
         }
       });
     });
@@ -300,10 +341,14 @@ class WorkspaceManager {
 
     this.data.currentWorkspaceId = workspaceId;
 
-    // Hide all content views
-    document.querySelectorAll('.content-view').forEach(view => view.classList.remove('active'));
+    // Hide all content views (add hidden, remove active)
+    document.querySelectorAll('.content-view').forEach(view => {
+      view.classList.add('hidden');
+      view.classList.remove('active');
+    });
     
-    // Show workspace content
+    // Show workspace content (remove hidden, add active)
+    workspaceContent.classList.remove('hidden');
     workspaceContent.classList.add('active');
 
     this.renderWorkspaceList();
