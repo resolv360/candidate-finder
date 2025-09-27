@@ -433,25 +433,107 @@ export class WorkspaceManager {
     this.saveToLocalStorage();
   }
 
-  private handleProfileLinkClick(_e: MouseEvent, profileId: string): void {
-    setTimeout(() => {
-      const workspace = this.getWorkspaceById(this.data.currentWorkspaceId);
-      if (!workspace) return;
+  private async handleProfileLinkClick(e: MouseEvent, profileId: string): Promise<void> {
+    const isUserGesture = Boolean(e?.isTrusted);
+    if (isUserGesture) {
+      e.preventDefault();
+    }
 
-      const profile = workspace.profiles.find((p) => p.link === profileId);
-      if (profile && !profile.checked) {
-        profile.checked = true;
-        this.updateProfileItemVisual(profileId, true);
+    const workspace = this.getWorkspaceById(this.data.currentWorkspaceId);
+    if (!workspace) {
+      console.error("Workspace not found while handling profile click");
+      return;
+    }
 
-        const checkbox = document.querySelector<HTMLInputElement>(
-          `input[data-profile-id="${profileId}"]`
-        );
-        if (checkbox) {
-          checkbox.checked = true;
-        }
-        console.log(`Auto-checked profile: ${profile.name}`);
+    const profile = workspace.profiles.find((p) => p.link === profileId);
+    if (!profile) {
+      console.error(`Profile with ID ${profileId} not found in current workspace`);
+      return;
+    }
+
+    if (!profile.checked) {
+      profile.checked = true;
+      this.updateProfileItemVisual(profileId, true);
+
+      const checkbox = document.querySelector<HTMLInputElement>(
+        `input[data-profile-id="${profileId}"]`
+      );
+      if (checkbox) {
+        checkbox.checked = true;
       }
-    }, 100);
+      console.log(`Auto-checked profile: ${profile.name}`);
+    }
+
+    const templateTextarea = document.getElementById(
+      "workspaceTemplateTextarea"
+    ) as HTMLTextAreaElement | null;
+    const baseTemplate = workspace.template || templateTextarea?.value || "";
+
+    if (isUserGesture && baseTemplate.trim()) {
+      const filledTemplate = baseTemplate.replace(/\[Name\]/gi, profile.name);
+
+      if (templateTextarea) {
+        templateTextarea.value = filledTemplate;
+      }
+
+      const copied = await this.copyTemplateToClipboard(filledTemplate);
+      if (copied) {
+        this.showTemporaryMessage(`Template ready for ${profile.name}`, "success");
+      } else {
+        this.showTemporaryMessage("Template populated but copy failed", "error");
+      }
+    } else if (isUserGesture && !baseTemplate.trim()) {
+      this.showTemporaryMessage("Add a template before copying", "error");
+    }
+
+    this.saveToLocalStorage();
+
+    if (isUserGesture) {
+      window.open(profile.link, "_blank", "noopener");
+    }
+  }
+
+  private async copyTemplateToClipboard(text: string): Promise<boolean> {
+    if (!text) return false;
+
+    try {
+      if (navigator.clipboard && typeof navigator.clipboard.writeText === "function") {
+        await navigator.clipboard.writeText(text);
+      } else {
+        this.copyTextFallback(text);
+      }
+      return true;
+    } catch (error) {
+      console.error("Clipboard API failed, attempting fallback:", error);
+      try {
+        this.copyTextFallback(text);
+        return true;
+      } catch (fallbackError) {
+        console.error("Fallback clipboard copy failed:", fallbackError);
+        return false;
+      }
+    }
+  }
+
+  private copyTextFallback(text: string): void {
+    const textarea = document.createElement("textarea");
+    textarea.value = text;
+    textarea.setAttribute("readonly", "");
+    textarea.style.position = "fixed";
+    textarea.style.top = "0";
+    textarea.style.left = "0";
+    textarea.style.opacity = "0";
+
+    document.body.appendChild(textarea);
+    textarea.focus();
+    textarea.select();
+
+    const successful = document.execCommand("copy");
+    document.body.removeChild(textarea);
+
+    if (!successful) {
+      throw new Error("document.execCommand('copy') failed");
+    }
   }
 
   private updateProfileItemVisual(profileId: string, checked: boolean): void {
