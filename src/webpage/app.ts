@@ -137,6 +137,16 @@ export class WorkspaceManager {
       };
     }
 
+    const getMoreCandidatesBtn = document.getElementById(
+      "getMoreCandidatesBtn"
+    ) as HTMLButtonElement | null;
+    if (getMoreCandidatesBtn) {
+      getMoreCandidatesBtn.onclick = (e) => {
+        console.log("Get more candidates button clicked");
+        this.getMoreCandidates();
+      };
+    }
+
     const downloadCSVBtn = document.getElementById(
       "workspaceDownloadCsvBtn"
     ) as HTMLButtonElement | null;
@@ -290,6 +300,9 @@ export class WorkspaceManager {
     workspaceList.innerHTML = "";
 
     this.data.workspaces.forEach((workspace, index) => {
+      const workspaceWrapper = document.createElement("div");
+      workspaceWrapper.className = "workspace-item-wrapper";
+
       const workspaceItem = document.createElement("button");
       workspaceItem.className = "workspace-item";
       workspaceItem.textContent = `#${index + 1} ${workspace.title}`;
@@ -308,7 +321,20 @@ export class WorkspaceManager {
         workspaceItem.classList.add("active");
       }
 
-      workspaceList.appendChild(workspaceItem);
+      const duplicateBtn = document.createElement("button");
+      duplicateBtn.className = "workspace-action-btn";
+      duplicateBtn.innerHTML = "🔄";
+      duplicateBtn.title = "Duplicate workspace";
+      duplicateBtn.type = "button";
+      duplicateBtn.onclick = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        this.duplicateWorkspace(workspace.id);
+      };
+
+      workspaceWrapper.appendChild(workspaceItem);
+      workspaceWrapper.appendChild(duplicateBtn);
+      workspaceList.appendChild(workspaceWrapper);
     });
 
     console.log(`Rendered ${this.data.workspaces.length} workspaces`);
@@ -680,38 +706,54 @@ export class WorkspaceManager {
 
     try {
       const apiKeys = getApiKeys();
+      
+      // Check if this is an existing workspace (Get More Candidates) or new one
+      const isExistingWorkspace = this.data.workspaces.some(
+        w => w.id === this.pendingWorkspaceData!.id
+      );
+      
+      // Get existing profile links to avoid duplicates
+      const existingLinks = new Set<string>(
+        this.pendingWorkspaceData.profiles.map(p => p.link)
+      );
+      
+      console.log(`Searching for candidates (existing: ${existingLinks.size}, requested: ${this.pendingWorkspaceData.candidateCount})`);
+      
       const res = await searchCandidates(
         this.pendingSearchQuery!,
         this.pendingWorkspaceData.candidateCount,
         {
           API_KEY: apiKeys.GOOGLE_CUSTOM_SEARCH_API_KEY,
           CX: apiKeys.GOOGLE_CUSTOM_SEARCH_ID,
-        }
+        },
+        existingLinks // Pass existing links to avoid duplicates
       );
       console.log("Results: ", res);
 
-      // const newWorkspace: Workspace = {
-      //   id: this.pendingWorkspaceData,
-      //   title: this.pendingWorkspaceData.title,
-      //   jobDescription: this.pendingWorkspaceData.jobDescription || "",
-      //   candidateCount: this.pendingWorkspaceData.candidateCount || 10,
-      //   queryCount: this.pendingWorkspaceData.queryCount || 3,
-      //   profiles: this.generateMockProfiles(
-      //     this.pendingWorkspaceData.candidateCount || 10
-      //   ),
-      //   template: this.getDefaultTemplate(),
-      // };
-
-      this.data.workspaces.push({
-        ...this.pendingWorkspaceData,
-        profiles: res.map((p) => ({ ...p, checked: false })),
-      });
-      this.hideLoading();
-      this.switchToWorkspace(this.pendingWorkspaceData.id);
-      console.log(
-        "New workspace created successfully:",
-        this.pendingWorkspaceData.title
-      );
+      if (isExistingWorkspace) {
+        // Get More Candidates: Add to existing workspace
+        const workspace = this.getWorkspaceById(this.pendingWorkspaceData.id);
+        if (workspace) {
+          const newProfiles = res.map((p) => ({ ...p, checked: false }));
+          workspace.profiles.push(...newProfiles);
+          console.log(`Added ${newProfiles.length} new candidates to workspace: ${workspace.title}`);
+          this.hideLoading();
+          this.switchToWorkspace(workspace.id);
+        }
+      } else {
+        // New workspace: Create and add
+        this.data.workspaces.push({
+          ...this.pendingWorkspaceData,
+          profiles: res.map((p) => ({ ...p, checked: false })),
+        });
+        this.hideLoading();
+        this.switchToWorkspace(this.pendingWorkspaceData.id);
+        console.log(
+          "New workspace created successfully:",
+          this.pendingWorkspaceData.title
+        );
+      }
+      
       this.pendingWorkspaceData = null;
     } catch (error) {
       console.error("Error submitting preview:", error);
@@ -727,6 +769,69 @@ export class WorkspaceManager {
   private getWorkspaceById(id: number | null): Workspace | undefined {
     if (id === null) return undefined;
     return this.data.workspaces.find((w) => w.id === id);
+  }
+
+  // ---------- Duplicate & Get More Methods ----------
+  async duplicateWorkspace(workspaceId: number): Promise<void> {
+    const originalWorkspace = this.getWorkspaceById(workspaceId);
+    if (!originalWorkspace) {
+      console.error(`Workspace with ID ${workspaceId} not found`);
+      return;
+    }
+
+    // Create a new workspace with the same parameters but empty profiles
+    const newWorkspaceData: Workspace = {
+      id: this.nextWorkspaceId++,
+      title: `${originalWorkspace.title} (Copy)`,
+      jobDescription: originalWorkspace.jobDescription,
+      candidateCount: originalWorkspace.candidateCount,
+      queryCount: originalWorkspace.queryCount,
+      profiles: [],
+      template: originalWorkspace.template,
+    };
+
+    console.log(`Duplicating workspace: ${originalWorkspace.title}`);
+    
+    // Open preview modal to regenerate queries and start search
+    await this.withLoading(async () => {
+      await this.openPreviewModal(newWorkspaceData);
+    });
+  }
+
+  async getMoreCandidates(): Promise<void> {
+    const workspace = this.getWorkspaceById(this.data.currentWorkspaceId);
+    if (!workspace) {
+      console.error("No active workspace found");
+      alert("Please select a workspace first");
+      return;
+    }
+
+    console.log(`Getting more candidates for workspace: ${workspace.title}`);
+    
+    // Reuse the same workspace but fetch more results
+    this.pendingWorkspaceData = workspace;
+
+    const apiKeys = getApiKeys();
+    const llm = new LLM(apiKeys.GEMINI_API_KEY);
+    
+    await this.withLoading(async () => {
+      // Generate new queries
+      this.pendingSearchQuery = await llm.getQueries(
+        workspace.jobDescription,
+        workspace.queryCount
+      );
+
+      const searchQueries = document.getElementById(
+        "searchQueries"
+      ) as HTMLTextAreaElement | null;
+      if (searchQueries) searchQueries.value = this.pendingSearchQuery.join("\n");
+
+      const modal = document.getElementById("previewModal");
+      if (modal) {
+        modal.classList.remove("hidden");
+        console.log("Preview modal opened for getting more candidates");
+      }
+    });
   }
 
   private generateMockQueries(

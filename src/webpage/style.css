@@ -793,6 +793,12 @@ select.form-control {
   gap: var(--space-8);
 }
 
+.workspace-item-wrapper {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
 .workspace-item {
   padding: var(--space-12) var(--space-16);
   background-color: transparent;
@@ -803,7 +809,30 @@ select.form-control {
   transition: all var(--duration-fast) var(--ease-standard);
   font-size: var(--font-size-base);
   text-align: left;
-  width: 100%;
+  flex: 1;
+}
+
+.workspace-action-btn {
+  padding: var(--space-8);
+  background-color: transparent;
+  color: var(--color-gray-400);
+  border: 1px solid transparent;
+  border-radius: var(--radius-base);
+  cursor: pointer;
+  transition: all var(--duration-fast) var(--ease-standard);
+  font-size: var(--font-size-sm);
+  line-height: 1;
+  min-width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.workspace-action-btn:hover {
+  background-color: rgba(var(--color-gray-400-rgb), 0.1);
+  border-color: rgba(var(--color-gray-400-rgb), 0.2);
+  color: var(--color-accent);
 }
 
 .workspace-item:hover {
