@@ -32,7 +32,7 @@ export class LLM {
 
   async getQueries(jdContent: string, noOfQueries: number) {
     const prompt = `
-      From the following Job Description, extract keywords to search for best suiting candidates using Google Search Engine in linkedin site.
+      From the following Job Description, extract keywords to search for best suiting candidates using Google Search Engine in professional networking sites.
       Filter by job locations given in the JD. 
       Give the response as plain text with each search on a separate line.
       Provide ${noOfQueries} different combinations of such search queries.

@@ -81,7 +81,7 @@ export class UIManager {
             <th style="width: 12%;">Location</th>
             <th style="width: 8%;">Stage</th>
             <th style="width: 8%;">Funding (in millions)</th>
-            <th style="width: 12%;">LinkedIn</th>
+            <th style="width: 12%;">Profile</th>
             <th style="width: 12%;">Action</th>
           </tr>
         </thead>
@@ -109,7 +109,7 @@ export class UIManager {
               <td>
                 ${startup.linkedin_url ? 
                   `<a href="${startup.linkedin_url}" target="_blank" class="linkedin-link">View Profile</a>` : 
-                  '<span class="text-muted">No LinkedIn</span>'
+                  '<span class="text-muted">No Profile</span>'
                 }
               </td>
               <td>

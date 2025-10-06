@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "LinkedIn Candidate Scrapper V2",
+  "name": "Candidate Finder",
   "version": "1.0",
   "permissions": ["tabs", "scripting", "clipboardWrite", "storage"],
   "background": {

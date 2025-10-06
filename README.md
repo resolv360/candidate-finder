@@ -1,3 +1,15 @@
+# Candidate Finder
+
+A powerful candidate search and management tool that helps you organize and track potential candidates across workspaces.
+
+## Features
+- 🔍 AI-powered candidate search using Google Custom Search
+- 📁 Organize candidates in multiple workspaces
+- 🤖 Generate search queries automatically using Gemini AI
+- 📊 Export candidates to CSV
+- 🎯 Template-based messaging system
+- 🚀 AI Startup Finder for lead generation
+
 ## Installation & Setup
 
 ### Building the extension

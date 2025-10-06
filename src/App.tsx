@@ -43,7 +43,7 @@ const App: React.FC = () => {
   if (isLoading) {
     return (
       <div style={{ padding: '20px', textAlign: 'center' }}>
-        <h2>Loading LinkedIn Recruiter Workspace...</h2>
+        <h2>Loading Candidate Finder Workspace...</h2>
         <div style={{ margin: '20px 0' }}>
           <div style={{
             display: 'inline-block',
