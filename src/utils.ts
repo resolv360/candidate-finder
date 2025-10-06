@@ -3,11 +3,6 @@ import { Profile, WorkspaceManagerData } from "./webpage/types";
 export function getDefaultWorkspaceManagerData(): WorkspaceManagerData {
   return {
     workspaces: [],
-    settings: {
-      GOOGLE_CUSTOM_SEARCH_API_KEY: "",
-      GOOGLE_CUSTOM_SEARCH_ID: "",
-      GEMINI_API_KEY: "",
-    },
     currentWorkspaceId: null,
   };
 }
@@ -32,7 +27,6 @@ export function fetchWorkspaceData(): Promise<WorkspaceManagerData> {
     });
   });
 }
-
 
 export function parseTemplate(template: string, candidate: Profile): string {
   return template

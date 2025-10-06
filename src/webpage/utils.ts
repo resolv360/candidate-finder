@@ -1,31 +1,40 @@
 import { WorkspaceManagerData } from "./types";
+import { WorkspaceStorage } from "./workspace-storage";
 
 export function getDefaultWorkspaceManagerData(): WorkspaceManagerData {
   return {
     workspaces: [],
-    settings: {
-      GOOGLE_CUSTOM_SEARCH_API_KEY: "",
-      GOOGLE_CUSTOM_SEARCH_ID: "",
-      GEMINI_API_KEY: "",
-    },
     currentWorkspaceId: null,
   };
 }
 
-export function fetchWorkspaceData(): Promise<WorkspaceManagerData> {
-  return new Promise((resolve) => {
-    try {
-      const data = localStorage.getItem('workspaceManagerData');
-      if (data) {
-        resolve(JSON.parse(data));
-      } else {
-        resolve(getDefaultWorkspaceManagerData());
-      }
-    } catch (error) {
-      console.error('Error getting data from localStorage:', error);
-      resolve(getDefaultWorkspaceManagerData());
-    }
-  });
+export async function fetchWorkspaceData(): Promise<WorkspaceManagerData> {
+  try {
+    const workspaces = await WorkspaceStorage.loadAllWorkspaces();
+    const currentWorkspaceId = await WorkspaceStorage.getCurrentWorkspaceId();
+    
+    console.log('Loaded workspace data:', {
+      workspaces: workspaces.length,
+      currentWorkspaceId
+    });
+    
+    return {
+      workspaces,
+      currentWorkspaceId
+    };
+  } catch (error) {
+    console.error('Error fetching workspace data:', error);
+    return getDefaultWorkspaceManagerData();
+  }
+}
+
+// Environment variable accessors
+export function getApiKeys() {
+  return {
+    GOOGLE_CUSTOM_SEARCH_API_KEY: import.meta.env.VITE_GOOGLE_CUSTOM_SEARCH_API_KEY || '',
+    GOOGLE_CUSTOM_SEARCH_ID: import.meta.env.VITE_GOOGLE_CUSTOM_SEARCH_ID || '',
+    GEMINI_API_KEY: import.meta.env.VITE_GEMINI_API_KEY || ''
+  };
 }
 
 

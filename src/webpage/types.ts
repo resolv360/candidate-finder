@@ -12,15 +12,8 @@ export interface Workspace {
   template: string;
 }
 
-export interface Settings {
-  GOOGLE_CUSTOM_SEARCH_API_KEY: string;
-  GOOGLE_CUSTOM_SEARCH_ID: string;
-  GEMINI_API_KEY: string;
-}
-
 export interface WorkspaceManagerData {
   workspaces: Workspace[];
-  settings: Settings;
   currentWorkspaceId: number | null;
 }
 

@@ -4,7 +4,8 @@ import {
   Workspace,
   WorkspaceManagerData,
 } from "./types";
-import { decodeHtmlEntities, downloadCSV, fetchWorkspaceData, getDefaultWorkspaceManagerData } from "./utils";
+import { decodeHtmlEntities, downloadCSV, fetchWorkspaceData, getDefaultWorkspaceManagerData, getApiKeys } from "./utils";
+import { WorkspaceStorage } from "./workspace-storage";
 
 import { LLM } from "./llm";
 import { LeadGenManager } from "./leadgen";
@@ -14,27 +15,34 @@ let tempNewWorkspaceData: Partial<Workspace> | null = null;
 
 export class WorkspaceManager {
   data: WorkspaceManagerData = getDefaultWorkspaceManagerData();
-  private nextWorkspaceId: number;
+  private nextWorkspaceId: number = 1;
   private nextProfileId: number;
   private pendingWorkspaceData: Workspace | null;
   private pendingSearchQuery: string[] | null = null;
 
   constructor() {
-    this.withLoading(this.fetchFromLocalStorage.bind(this)).then((data) => {
+    this.withLoading(this.fetchFromLocalStorage.bind(this)).then(async (data) => {
       this.data = data;
+      this.nextWorkspaceId = await WorkspaceStorage.getNextWorkspaceId();
       this.init();
     });
-    this.nextWorkspaceId = 3;
     this.nextProfileId = 9;
     this.pendingWorkspaceData = null;
   }
 
-  saveToLocalStorage(): void {
+  async saveToLocalStorage(): Promise<void> {
     try {
-      localStorage.setItem('workspaceManagerData', JSON.stringify(this.data));
-      console.log("Data successfully saved to localStorage");
+      // Save current workspace ID
+      await WorkspaceStorage.setCurrentWorkspaceId(this.data.currentWorkspaceId);
+      
+      // Save each workspace individually
+      for (const workspace of this.data.workspaces) {
+        await WorkspaceStorage.saveWorkspace(workspace);
+      }
+      
+      console.log("All workspaces saved successfully");
     } catch (error) {
-      console.error("Error saving to localStorage:", error);
+      console.error("Error saving workspaces:", error);
     }
   }
 
@@ -139,17 +147,7 @@ export class WorkspaceManager {
       };
     }
 
-    const settingsBtn = document.getElementById(
-      "settingsBtn"
-    ) as HTMLButtonElement | null;
-    if (settingsBtn) {
-      settingsBtn.onclick = (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        console.log("Settings button clicked");
-        this.openSettingsModal();
-      };
-    }
+
 
     this.bindModalEvents("createWorkspace", {
       close: () => this.closeCreateWorkspaceModal(),
@@ -161,12 +159,6 @@ export class WorkspaceManager {
       close: () => this.closePreviewModal(),
       cancel: () => this.closePreviewModal(),
       submit: (e) => this.handlePreviewSubmit(e),
-    });
-
-    this.bindModalEvents("settings", {
-      close: () => this.closeSettingsModal(),
-      cancel: () => this.closeSettingsModal(),
-      submit: (e) => this.handleSettingsSubmit(e),
     });
 
     const templateTextarea = document.getElementById(
@@ -568,13 +560,13 @@ export class WorkspaceManager {
       return;
     }
 
+    const apiKeys = getApiKeys();
     if (
-      !this.data.settings.GEMINI_API_KEY ||
-      !this.data.settings.GOOGLE_CUSTOM_SEARCH_API_KEY ||
-      !this.data.settings.GOOGLE_CUSTOM_SEARCH_ID
+      !apiKeys.GEMINI_API_KEY ||
+      !apiKeys.GOOGLE_CUSTOM_SEARCH_API_KEY ||
+      !apiKeys.GOOGLE_CUSTOM_SEARCH_ID
     ) {
-      alert("First add credentials in settings");
-      this.openSettingsModal();
+      alert("Please add API keys to your .env file");
       return;
     }
 
@@ -649,7 +641,8 @@ export class WorkspaceManager {
   async openPreviewModal(workspaceData: Workspace): Promise<void> {
     this.pendingWorkspaceData = workspaceData;
 
-    const llm = new LLM(this.data.settings.GEMINI_API_KEY);
+    const apiKeys = getApiKeys();
+    const llm = new LLM(apiKeys.GEMINI_API_KEY);
     this.pendingSearchQuery = await llm.getQueries(
       workspaceData.jobDescription,
       workspaceData.queryCount
@@ -686,12 +679,13 @@ export class WorkspaceManager {
     this.showLoading();
 
     try {
+      const apiKeys = getApiKeys();
       const res = await searchCandidates(
         this.pendingSearchQuery!,
         this.pendingWorkspaceData.candidateCount,
         {
-          API_KEY: this.data.settings.GOOGLE_CUSTOM_SEARCH_API_KEY,
-          CX: this.data.settings.GOOGLE_CUSTOM_SEARCH_ID,
+          API_KEY: apiKeys.GOOGLE_CUSTOM_SEARCH_API_KEY,
+          CX: apiKeys.GOOGLE_CUSTOM_SEARCH_ID,
         }
       );
       console.log("Results: ", res);
@@ -725,67 +719,9 @@ export class WorkspaceManager {
     }
   }
 
-  openSettingsModal(): void {
-    const modal = document.getElementById("settingsModal");
-    if (!modal) {
-      console.error("Settings modal not found");
-      return;
-    }
 
-    const settings = this.data.settings;
 
-    const googleApiKeyInput = document.getElementById(
-      "googleApiKey"
-    ) as HTMLInputElement | null;
-    const googleSearchIdInput = document.getElementById(
-      "googleSearchId"
-    ) as HTMLInputElement | null;
-    const geminiApiKeyInput = document.getElementById(
-      "geminiApiKey"
-    ) as HTMLInputElement | null;
 
-    if (googleApiKeyInput)
-      googleApiKeyInput.value = settings.GOOGLE_CUSTOM_SEARCH_API_KEY || "";
-    if (googleSearchIdInput)
-      googleSearchIdInput.value = settings.GOOGLE_CUSTOM_SEARCH_ID || "";
-    if (geminiApiKeyInput)
-      geminiApiKeyInput.value = settings.GEMINI_API_KEY || "";
-
-    modal.classList.remove("hidden");
-    console.log("Settings modal opened");
-  }
-
-  closeSettingsModal(): void {
-    const modal = document.getElementById("settingsModal");
-    if (modal) {
-      modal.classList.add("hidden");
-      console.log("Settings modal closed");
-    }
-  }
-
-  handleSettingsSubmit(e: Event): void {
-    e.preventDefault();
-    console.log("Handling settings submission");
-
-    const googleApiKeyInput = document.getElementById(
-      "googleApiKey"
-    ) as HTMLInputElement | null;
-    const googleSearchIdInput = document.getElementById(
-      "googleSearchId"
-    ) as HTMLInputElement | null;
-    const geminiApiKeyInput = document.getElementById(
-      "geminiApiKey"
-    ) as HTMLInputElement | null;
-
-    this.data.settings = {
-      GOOGLE_CUSTOM_SEARCH_API_KEY: googleApiKeyInput?.value || "",
-      GOOGLE_CUSTOM_SEARCH_ID: googleSearchIdInput?.value || "",
-      GEMINI_API_KEY: geminiApiKeyInput?.value || "",
-    };
-
-    this.closeSettingsModal();
-    this.showTemporaryMessage("Settings saved successfully!", "success");
-  }
 
   // ---------- Utility Methods ----------
   private getWorkspaceById(id: number | null): Workspace | undefined {

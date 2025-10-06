@@ -26,9 +26,6 @@
                     <button class="btn btn--primary btn--full-width" id="createWorkspaceBtn">
                         + Create Workspace
                     </button>
-                    <button class="btn btn--outline btn--full-width" id="settingsBtn">
-                        ⚙️ Settings
-                    </button>
                 </div>
                 
                 <div class="workspace-list" id="workspaceList">
@@ -228,36 +225,7 @@
         </div>
     </div>
 
-    <!-- Settings Modal -->
-    <div class="modal hidden" id="settingsModal">
-        <div class="modal-backdrop" id="settingsBackdrop"></div>
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>Settings</h3>
-                <button class="modal-close" id="settingsClose">&times;</button>
-            </div>
-            <form id="settingsForm">
-                <div class="modal-body">
-                    <div class="form-group">
-                        <label class="form-label" for="googleApiKey">Google Custom Search API Key</label>
-                        <input type="password" class="form-control" id="googleApiKey" placeholder="Enter API key...">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label" for="googleSearchId">Google Custom Search ID</label>
-                        <input type="text" class="form-control" id="googleSearchId" placeholder="Enter search ID...">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label" for="geminiApiKey">Gemini API Key</label>
-                        <input type="password" class="form-control" id="geminiApiKey" placeholder="Enter API key...">
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn--outline" id="cancelSettings">Cancel</button>
-                    <button type="submit" class="btn btn--primary">Save</button>
-                </div>
-            </form>
-        </div>
-    </div>
+
 
     <!-- Loading Spinner -->
     <div class="loading-overlay hidden" id="loadingOverlay">
