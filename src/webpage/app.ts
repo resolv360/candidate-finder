@@ -84,21 +84,6 @@ export class WorkspaceManager {
     }
   }
 
-  public openNext5Workspaces(): void {
-    console.log("Opening next 5 workspaces...");
-    const workspace = this.getWorkspaceById(this.data.currentWorkspaceId);
-    if (!workspace) return;
-
-    const candidates = workspace.profiles
-      .filter((profile) => !profile.checked)
-      .slice(0, 5);
-
-    candidates.forEach((profile) => {
-      window.open(profile.link, "_blank", "noopener");
-      this.handleProfileLinkClick(new MouseEvent("click"), profile.link);
-    });
-  }
-
   public downloadCSV() {
     const workspace = this.getWorkspaceById(this.data.currentWorkspaceId);
     if (!workspace) return;
@@ -124,16 +109,6 @@ export class WorkspaceManager {
         e.stopPropagation();
         console.log("Create workspace button clicked");
         this.openCreateWorkspaceModal();
-      };
-    }
-
-    const openNext5Btn = document.getElementById(
-      "openNext5Btn"
-    ) as HTMLButtonElement | null;
-    if (openNext5Btn) {
-      openNext5Btn.onclick = (e) => {
-        console.log("Open next 5 button clicked");
-        this.openNext5Workspaces();
       };
     }
 
