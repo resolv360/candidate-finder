@@ -4,11 +4,11 @@ import {
   Workspace,
   WorkspaceManagerData,
 } from "./types";
-import { decodeHtmlEntities, downloadCSV, fetchWorkspaceData, getDefaultWorkspaceManagerData, getApiKeys } from "./utils";
-import { WorkspaceStorage } from "./workspace-storage";
+import { decodeHtmlEntities, downloadCSV, fetchWorkspaceData, getApiKeys, getDefaultWorkspaceManagerData } from "./utils";
 
 import { LLM } from "./llm";
 import { LeadGenManager } from "./leadgen";
+import { WorkspaceStorage } from "./workspace-storage";
 import { searchCandidates } from "./candidate-search";
 
 let tempNewWorkspaceData: Partial<Workspace> | null = null;
@@ -675,27 +675,45 @@ export class WorkspaceManager {
 
     if (!this.pendingWorkspaceData) return;
     console.log("Pending workspace data:", this.pendingWorkspaceData);
+    // Read the (possibly edited) queries from the textarea so generated queries are editable
+    const searchQueriesEl = document.getElementById(
+      "searchQueries"
+    ) as HTMLTextAreaElement | null;
+
+    const editedQueries = searchQueriesEl
+      ? searchQueriesEl.value
+          .split("\n")
+          .map((q) => q.trim())
+          .filter(Boolean)
+      : null;
+
+    // Use edited queries if provided, otherwise fall back to generated queries
+    const queriesToUse = (editedQueries && editedQueries.length > 0)
+      ? editedQueries
+      : this.pendingSearchQuery || [];
 
     this.closePreviewModal();
     this.showLoading();
 
     try {
       const apiKeys = getApiKeys();
-      
+
       // Check if this is an existing workspace (Get More Candidates) or new one
       const isExistingWorkspace = this.data.workspaces.some(
-        w => w.id === this.pendingWorkspaceData!.id
+        (w) => w.id === this.pendingWorkspaceData!.id
       );
-      
+
       // Get existing profile links to avoid duplicates
       const existingLinks = new Set<string>(
-        this.pendingWorkspaceData.profiles.map(p => p.link)
+        this.pendingWorkspaceData.profiles.map((p) => p.link)
       );
-      
-      console.log(`Searching for candidates (existing: ${existingLinks.size}, requested: ${this.pendingWorkspaceData.candidateCount})`);
-      
+
+      console.log(
+        `Searching for candidates (existing: ${existingLinks.size}, requested: ${this.pendingWorkspaceData.candidateCount})`
+      );
+
       const res = await searchCandidates(
-        this.pendingSearchQuery!,
+        queriesToUse,
         this.pendingWorkspaceData.candidateCount,
         {
           API_KEY: apiKeys.GOOGLE_CUSTOM_SEARCH_API_KEY,
@@ -711,7 +729,9 @@ export class WorkspaceManager {
         if (workspace) {
           const newProfiles = res.map((p) => ({ ...p, checked: false }));
           workspace.profiles.push(...newProfiles);
-          console.log(`Added ${newProfiles.length} new candidates to workspace: ${workspace.title}`);
+          console.log(
+            `Added ${newProfiles.length} new candidates to workspace: ${workspace.title}`
+          );
           this.hideLoading();
           this.switchToWorkspace(workspace.id);
         }
@@ -723,12 +743,9 @@ export class WorkspaceManager {
         });
         this.hideLoading();
         this.switchToWorkspace(this.pendingWorkspaceData.id);
-        console.log(
-          "New workspace created successfully:",
-          this.pendingWorkspaceData.title
-        );
+        console.log("New workspace created successfully:", this.pendingWorkspaceData.title);
       }
-      
+
       this.pendingWorkspaceData = null;
     } catch (error) {
       console.error("Error submitting preview:", error);
